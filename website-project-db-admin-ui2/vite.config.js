@@ -1,4 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -13,8 +15,8 @@ export default defineConfig({
   },
   server: {
     https: {
-      key: `${process.env.PROJECT_DIR}/local/certs/waldritter.${process.env.PROJECT_TLD}+1-key.pem`,
-      cert: `${process.env.PROJECT_DIR}/local/certs/waldritter.${process.env.PROJECT_TLD}+1.pem`
+      key: readFileSync(resolve(__dirname, 'local/certs/waldritter.cisco.local+1-key.pem')),
+      cert: readFileSync(resolve(__dirname, 'local/certs/waldritter.cisco.local+1.pem'))
     }
   }
 })

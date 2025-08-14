@@ -1,27 +1,4 @@
-import type { Struct, Schema } from '@strapi/strapi';
-
-export interface ProjectsProjectSearch extends Struct.ComponentSchema {
-  collectionName: 'components_projects_project_searches';
-  info: {
-    displayName: 'ProjectSearch';
-    icon: 'search';
-  };
-  attributes: {
-    filter: Schema.Attribute.Component<'projects.project-filter', false>;
-  };
-}
-
-export interface ProjectsProjectFilter extends Struct.ComponentSchema {
-  collectionName: 'components_projects_project_filters';
-  info: {
-    displayName: 'ProjectFilter';
-    icon: 'database';
-  };
-  attributes: {
-    selectedTags: Schema.Attribute.JSON;
-    hiddenCategories: Schema.Attribute.JSON;
-  };
-}
+import type { Schema, Struct } from '@strapi/strapi';
 
 export interface NavigationLink extends Struct.ComponentSchema {
   collectionName: 'components_navigation_links';
@@ -30,10 +7,66 @@ export interface NavigationLink extends Struct.ComponentSchema {
     icon: 'link';
   };
   attributes: {
-    label: Schema.Attribute.String;
-    url: Schema.Attribute.String;
     external: Schema.Attribute.Boolean;
+    label: Schema.Attribute.String;
     svgIcon: Schema.Attribute.Text;
+    url: Schema.Attribute.String;
+  };
+}
+
+export interface PageContact extends Struct.ComponentSchema {
+  collectionName: 'components_page_contacts';
+  info: {
+    description: '';
+    displayName: 'Contact';
+  };
+  attributes: {
+    email: Schema.Attribute.String;
+    image: Schema.Attribute.Media<'images' | 'files'>;
+    name: Schema.Attribute.String;
+    social_links: Schema.Attribute.Component<'navigation.link', true>;
+  };
+}
+
+export interface PageHero extends Struct.ComponentSchema {
+  collectionName: 'components_page_heroes';
+  info: {
+    description: '';
+    displayName: 'Hero';
+  };
+  attributes: {
+    description: Schema.Attribute.Text;
+    image: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
+    more_link: Schema.Attribute.String;
+    title: Schema.Attribute.String;
+  };
+}
+
+export interface PageHighlight extends Struct.ComponentSchema {
+  collectionName: 'components_page_highlights';
+  info: {
+    description: '';
+    displayName: 'Highlight';
+    icon: 'emotionHappy';
+  };
+  attributes: {
+    description: Schema.Attribute.Text;
+    image: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
+    title: Schema.Attribute.String;
+    to: Schema.Attribute.Component<'navigation.link', true>;
+  };
+}
+
+export interface PageHighlightReel extends Struct.ComponentSchema {
+  collectionName: 'components_page_highlight_reels';
+  info: {
+    displayName: 'HighlightReel';
+    icon: 'plane';
+  };
+  attributes: {
+    highlights: Schema.Attribute.Component<'page.highlight', true>;
+    projectFilter: Schema.Attribute.Component<'projects.project-filter', false>;
+    projectsToHighlight: Schema.Attribute.Integer;
   };
 }
 
@@ -48,73 +81,40 @@ export interface PageMarkdown extends Struct.ComponentSchema {
   };
 }
 
-export interface PageHighlight extends Struct.ComponentSchema {
-  collectionName: 'components_page_highlights';
+export interface ProjectsProjectFilter extends Struct.ComponentSchema {
+  collectionName: 'components_projects_project_filters';
   info: {
-    displayName: 'Highlight';
-    icon: 'emotionHappy';
-    description: '';
+    displayName: 'ProjectFilter';
+    icon: 'database';
   };
   attributes: {
-    title: Schema.Attribute.String;
-    description: Schema.Attribute.Text;
-    image: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
-    to: Schema.Attribute.Component<'navigation.link', true>;
+    hiddenCategories: Schema.Attribute.JSON;
+    selectedTags: Schema.Attribute.JSON;
   };
 }
 
-export interface PageHighlightReel extends Struct.ComponentSchema {
-  collectionName: 'components_page_highlight_reels';
+export interface ProjectsProjectSearch extends Struct.ComponentSchema {
+  collectionName: 'components_projects_project_searches';
   info: {
-    displayName: 'HighlightReel';
-    icon: 'plane';
+    displayName: 'ProjectSearch';
+    icon: 'search';
   };
   attributes: {
-    projectFilter: Schema.Attribute.Component<'projects.project-filter', false>;
-    projectsToHighlight: Schema.Attribute.Integer;
-    highlights: Schema.Attribute.Component<'page.highlight', true>;
-  };
-}
-
-export interface PageHero extends Struct.ComponentSchema {
-  collectionName: 'components_page_heroes';
-  info: {
-    displayName: 'Hero';
-    description: '';
-  };
-  attributes: {
-    title: Schema.Attribute.String;
-    description: Schema.Attribute.Text;
-    image: Schema.Attribute.Media<'images' | 'files' | 'videos'>;
-    more_link: Schema.Attribute.String;
-  };
-}
-
-export interface PageContact extends Struct.ComponentSchema {
-  collectionName: 'components_page_contacts';
-  info: {
-    displayName: 'Contact';
-    description: '';
-  };
-  attributes: {
-    name: Schema.Attribute.String;
-    email: Schema.Attribute.String;
-    image: Schema.Attribute.Media<'images' | 'files'>;
-    social_links: Schema.Attribute.Component<'navigation.link', true>;
+    filter: Schema.Attribute.Component<'projects.project-filter', false>;
   };
 }
 
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
-      'projects.project-search': ProjectsProjectSearch;
-      'projects.project-filter': ProjectsProjectFilter;
       'navigation.link': NavigationLink;
-      'page.markdown': PageMarkdown;
+      'page.contact': PageContact;
+      'page.hero': PageHero;
       'page.highlight': PageHighlight;
       'page.highlight-reel': PageHighlightReel;
-      'page.hero': PageHero;
-      'page.contact': PageContact;
+      'page.markdown': PageMarkdown;
+      'projects.project-filter': ProjectsProjectFilter;
+      'projects.project-search': ProjectsProjectSearch;
     }
   }
 }

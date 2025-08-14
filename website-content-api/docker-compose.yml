@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  content-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waldritter-content-api
+    ports:
+      - "1337:1337"
+    volumes:
+      # Mount the Obsidian vault for live editing
+      - ./obsidian-vault:/root/obsidian-vault
+    environment:
+      - PORT=1337
+      - VAULT_PATH=/root/obsidian-vault
+      - ENABLE_PLAYGROUND=true
+      - ENABLE_WATCHER=true
+    restart: unless-stopped
+    networks:
+      - waldritter-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:1337/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development version with hot reload and local file mounting
+  content-api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: waldritter-content-api-dev
+    ports:
+      - "1337:1337"
+    volumes:
+      # Mount source code for development
+      - .:/app
+      # Mount Obsidian vault
+      - ./obsidian-vault:/app/obsidian-vault
+    environment:
+      - PORT=1337
+      - VAULT_PATH=/app/obsidian-vault
+      - ENABLE_PLAYGROUND=true
+      - ENABLE_WATCHER=true
+    networks:
+      - waldritter-network
+    profiles:
+      - dev
+
+networks:
+  waldritter-network:
+    driver: bridge
+    name: waldritter-network

@@ -3,7 +3,11 @@
 # Individual Server Commands
 # ==========================
 
-# Run Strapi CMS development server (port 1337)
+# Run Content API server (Go GraphQL server on port 1337)
+content-api-dev:
+    cd website-content-api && go run main.go -port 1337 -vault ./obsidian-vault
+
+# Run Strapi CMS development server (port 1337) - DEPRECATED
 strapi-dev:
     cd website-pages/website-pages && npm run develop
 
@@ -29,13 +33,13 @@ dev-all:
     
     echo "Starting all development servers..."
     echo "=================================="
-    echo "Strapi CMS: http://localhost:1337"
+    echo "Content API: http://localhost:1337"
     echo "Rails API: http://localhost:3000"
     echo "Admin UI: http://localhost:5173"
     echo "Public UI: http://localhost:5174"
     echo "=================================="
     
-    (cd website-pages/website-pages && npm run develop) &
+    (cd website-content-api && go run main.go -port 1337 -vault ./obsidian-vault) &
     (cd website-project-db-api && rails server) &
     (cd website-project-db-admin-ui2 && npm run dev) &
     (cd website-ui && pnpm dev) &
@@ -49,11 +53,11 @@ dev-backend:
     
     echo "Starting backend services..."
     echo "============================"
-    echo "Strapi CMS: http://localhost:1337"
+    echo "Content API: http://localhost:1337"
     echo "Rails API: http://localhost:3000"
     echo "============================"
     
-    (cd website-pages/website-pages && npm run develop) &
+    (cd website-content-api && go run main.go -port 1337 -vault ./obsidian-vault) &
     (cd website-project-db-api && rails server) &
     
     wait
@@ -80,6 +84,7 @@ dev-frontend:
 # Install dependencies for all projects
 install-all:
     echo "Installing dependencies for all projects..."
+    cd website-content-api && go mod download
     cd website-pages/website-pages && npm install
     cd website-project-db-api && bundle install
     cd website-project-db-admin-ui2 && npm install
@@ -100,9 +105,9 @@ status:
     echo ""
     
     if lsof -Pi :1337 -sTCP:LISTEN -t >/dev/null ; then
-        echo "✅ Strapi CMS is running on port 1337"
+        echo "✅ Content API is running on port 1337"
     else
-        echo "❌ Strapi CMS is not running"
+        echo "❌ Content API is not running"
     fi
     
     if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null ; then
@@ -173,6 +178,21 @@ rails-console:
 rails-test:
     cd website-project-db-api && rake test
 
+# Strapi Data Commands
+# =====================
+
+# Export Strapi data to a file
+strapi-export file="strapi-export.tar.gz":
+    cd website-pages/website-pages && npx strapi export --file {{file}} --no-encrypt
+
+# Import Strapi data from a file
+strapi-import file="strapi-export.tar.gz":
+    cd website-pages/website-pages && npx strapi import --file {{file}} --force
+
+# Export Strapi data with timestamp
+strapi-export-backup:
+    cd website-pages/website-pages && npx strapi export --file "strapi-backup-$(date +%Y%m%d-%H%M%S).tar.gz" --no-encrypt
+
 # Build Commands
 # ==============
 
@@ -201,6 +221,40 @@ build-all:
 # Run Public Website unit tests
 ui-test:
     cd website-ui && pnpm test:unit
+
+# Run Content API tests
+content-api-test:
+    cd website-content-api && go test ./... -v
+
+# Run all tests
+test-all:
+    just rails-test
+    just ui-test
+    just content-api-test
+    echo "All tests completed!"
+
+# Content API Commands
+# =====================
+
+# Build Content API binary
+content-api-build:
+    cd website-content-api && go build -o website-content-api main.go
+
+# Run Content API with Docker
+content-api-docker:
+    cd website-content-api && docker-compose up
+
+# Build Content API Docker image
+content-api-docker-build:
+    cd website-content-api && docker build -t website-content-api .
+
+# Watch Obsidian vault for changes (verbose mode)
+content-api-watch:
+    cd website-content-api && go run main.go -port 1337 -vault ./obsidian-vault -verbose
+
+# Open GraphQL playground
+content-api-playground:
+    open http://localhost:1337
 
 # Docker Commands (for Strapi)
 # =============================

@@ -1,0 +1,130 @@
+scalar Time
+
+type Query {
+  # Page queries
+  pages: [Page!]!
+  page(documentId: ID!): Page
+  
+  # Navigation queries
+  menuItems(pagination: PaginationInput): [MenuItem!]!
+  
+  # Footer query
+  footer: Footer
+}
+
+# Input types
+input PaginationInput {
+  limit: Int
+  offset: Int
+}
+
+# Page types
+type Page {
+  documentId: ID!
+  url: String!
+  content: [Component!]!
+  metadata: PageMetadata
+}
+
+type PageMetadata {
+  title: String
+  description: String
+  lastModified: Time
+  author: String
+}
+
+# Component union type - matching Strapi's component structure
+union Component = 
+  ComponentPageMarkdown | 
+  ComponentPageHero | 
+  ComponentPageContact | 
+  ComponentProjectsProjectSearch |
+  ComponentPageHighlightReel
+
+# Component implementations
+type ComponentPageMarkdown {
+  id: ID!
+  markdown: String!
+}
+
+type ComponentPageHero {
+  id: ID!
+  title: String!
+  description: String!
+  more_link: String
+  image: Image
+}
+
+type ComponentPageContact {
+  id: ID!
+  name: String!
+  email: String!
+  image: Image
+  social_links: [SocialLink!]!
+}
+
+type ComponentProjectsProjectSearch {
+  id: ID!
+  filter: ProjectFilter
+}
+
+type ComponentPageHighlightReel {
+  id: ID!
+  highlights: [Highlight!]!
+  projectsToHighlight: [String!]
+  projectFilter: ProjectFilter
+}
+
+# Supporting types
+type Image {
+  url: String!
+  caption: String
+  width: Int
+  height: Int
+}
+
+type SocialLink {
+  label: String!
+  url: String!
+  external: Boolean!
+  svgIcon: String
+}
+
+type ProjectFilter {
+  hiddenCategories: [String!]
+  selectedTags: [String!]
+}
+
+type Highlight {
+  description: String!
+  image: Image!
+}
+
+# Navigation types
+type MenuItem {
+  documentId: ID!
+  label: String!
+  to: String
+  items: [MenuItem!]
+  order: Int
+}
+
+# Footer type
+type Footer {
+  shortDescriptionTitle: String!
+  shortDescriptionText: String!
+  links_1: [FooterLink!]!
+  links_2: [FooterLink!]!
+  social_links: [FooterSocialLink!]!
+}
+
+type FooterLink {
+  label: String!
+  url: String!
+}
+
+type FooterSocialLink {
+  label: String!
+  url: String!
+  svgIcon: String
+}

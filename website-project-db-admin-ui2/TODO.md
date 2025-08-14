@@ -1,0 +1,23 @@
+- [ ] Delete
+    - [x] Tags
+    - [x] Categories
+    - [x] Projects
+- [ ] Associate/Disassociate Tags and Projects
+  - [x] Tag Project
+  - [ ] View Tag
+  - [ ] View Project
+- [ ] Cancel Buttons
+- [ ] Images
+- [ ] Fancier Attributes Like Current HP
+- [ ] Rich Text Editor for Descriptions
+- [ ] Events
+    - [ ] Dates + Recurrence
+    - [ ] Locations
+- [ ] Flashes
+- [ ] API Error Handling
+- [ ] Periodic Reload
+
+- [ ] Consumer Frontend
+- [ ] Publish / Hide
+- [ ] Pagination For Projects (Admin UI, Consumer Frontend)
+- [ ] Auth / Authz

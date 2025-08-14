@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_projects_project_searches",
+  "info": {
+    "displayName": "ProjectSearch",
+    "icon": "search"
+  },
+  "options": {},
+  "attributes": {
+    "filter": {
+      "type": "component",
+      "repeatable": false,
+      "component": "projects.project-filter"
+    }
+  }
+}

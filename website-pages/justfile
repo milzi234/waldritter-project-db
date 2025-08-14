@@ -1,0 +1,4 @@
+build-toolkit-container:
+    docker build -t strapi-toolkit-container .
+run-toolkit-container:
+    docker run -ti --rm -v $(pwd):/project -p 1337:1337 strapi-toolkit-container

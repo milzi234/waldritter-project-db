@@ -1,0 +1,2 @@
+ui-start:
+    npm run dev -- --host admin.waldritter.cisco.local

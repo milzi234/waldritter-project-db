@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_projects_project_filters",
+  "info": {
+    "displayName": "ProjectFilter",
+    "icon": "database"
+  },
+  "options": {},
+  "attributes": {
+    "selectedTags": {
+      "type": "json"
+    },
+    "hiddenCategories": {
+      "type": "json"
+    }
+  }
+}

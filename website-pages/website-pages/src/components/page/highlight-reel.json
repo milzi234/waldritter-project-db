@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_page_highlight_reels",
+  "info": {
+    "displayName": "HighlightReel",
+    "icon": "plane"
+  },
+  "options": {},
+  "attributes": {
+    "projectFilter": {
+      "type": "component",
+      "repeatable": false,
+      "component": "projects.project-filter"
+    },
+    "projectsToHighlight": {
+      "type": "integer"
+    },
+    "highlights": {
+      "type": "component",
+      "repeatable": true,
+      "component": "page.highlight"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "website-pages",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A Strapi application",
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "build": "strapi build",
+    "strapi": "strapi",
+    "deploy": "strapi deploy"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@strapi/plugin-cloud": "5.0.0-rc.10",
+    "@strapi/plugin-graphql": "^5.0.0-rc.9",
+    "@strapi/plugin-users-permissions": "5.0.0-rc.10",
+    "@strapi/strapi": "5.0.0-rc.10",
+    "better-sqlite3": "9.4.3",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "styled-components": "^6.0.0"
+  },
+  "author": {
+    "name": "A Strapi developer"
+  },
+  "strapi": {
+    "uuid": "5a2d286c-ecaf-4c69-ac20-fb47604674c3"
+  },
+  "engines": {
+    "node": ">=18.0.0 <=20.x.x",
+    "npm": ">=6.0.0"
+  },
+  "license": "MIT"
+}

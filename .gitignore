@@ -1,0 +1,58 @@
+# Node modules
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+build/
+*.build/
+
+# Go binaries
+website-content-api/website-content-api
+website-content-api/website-content-api.exe
+*.exe
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+.tmp/
+tmp/
+temp/
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Test coverage
+coverage/
+*.coverage
+.nyc_output/
+
+# Strapi
+.strapi-updater.json
+.strapi/
+exports/
+
+# Obsidian vault (content managed separately)
+website-content-api/obsidian-vault/

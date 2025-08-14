@@ -1,0 +1,42 @@
+{{- if and .Values.contentApi.enabled .Values.contentApi.gitSync.enabled }}
+{{- if eq .Values.contentApi.gitSync.auth.method "ssh" }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-git-sync-ssh
+  labels:
+    {{- include "waldritter-website.labels" . | nindent 4 }}
+    app.kubernetes.io/component: content-api-git-sync
+type: Opaque
+data:
+  {{- if .Values.contentApi.gitSync.auth.sshKey }}
+  ssh: {{ .Values.contentApi.gitSync.auth.sshKey }}
+  {{- else }}
+  # SSH key must be base64 encoded
+  # Example: cat ~/.ssh/id_rsa | base64 -w 0
+  ssh: ""
+  {{- end }}
+{{- else if eq .Values.contentApi.gitSync.auth.method "https" }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-git-sync
+  labels:
+    {{- include "waldritter-website.labels" . | nindent 4 }}
+    app.kubernetes.io/component: content-api-git-sync
+type: Opaque
+data:
+  {{- if .Values.contentApi.gitSync.auth.username }}
+  username: {{ .Values.contentApi.gitSync.auth.username | b64enc }}
+  {{- else }}
+  username: ""
+  {{- end }}
+  {{- if .Values.contentApi.gitSync.auth.password }}
+  password: {{ .Values.contentApi.gitSync.auth.password | b64enc }}
+  {{- else }}
+  password: ""
+  {{- end }}
+{{- end }}
+{{- end }}

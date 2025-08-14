@@ -1,0 +1,159 @@
+# Production values
+global:
+  imageRegistry: ""
+  imagePullSecrets:
+    - name: dockerhub-registry
+
+contentApi:
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "fast-ssd"
+  
+  # Production git sync configuration (optional)
+  # Uncomment and configure to sync content from a git repository
+  # gitSync:
+  #   enabled: true
+  #   repo: https://github.com/waldritter/obsidian-vault.git  # Your production vault repository
+  #   branch: production  # Production branch
+  #   period: "300s"  # 5 minutes sync interval for production
+  #   depth: "10"  # Keep some history for rollback capability
+  #   
+  #   # For private repositories, use authentication
+  #   auth:
+  #     method: https  # or ssh
+  #     # Store credentials in a separate secret for security
+  #     # kubectl create secret generic git-sync-auth \
+  #     #   --from-literal=username=your-username \
+  #     #   --from-literal=password=your-token
+  #   
+  #   # Resource limits for production
+  #   resources:
+  #     limits:
+  #       cpu: 200m
+  #       memory: 256Mi
+  #     requests:
+  #       cpu: 100m
+  #       memory: 128Mi
+
+railsApi:
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  env:
+    - name: RAILS_ENV
+      value: "production"
+    - name: RAILS_LOG_TO_STDOUT
+      value: "true"
+    - name: SECRET_KEY_BASE
+      valueFrom:
+        secretKeyRef:
+          name: rails-secrets
+          key: secret-key-base
+  persistence:
+    database:
+      enabled: true
+      size: 20Gi
+      storageClass: "fast-ssd"
+    storage:
+      enabled: true
+      size: 50Gi
+      storageClass: "standard"
+
+websiteUi:
+  replicaCount: 3
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  env:
+    - name: VITE_GRAPHQL_URI
+      value: "https://api.waldritter.com/graphql"
+    - name: VITE_RAILS_API_URL
+      value: "https://api.waldritter.com"
+    - name: VITE_APP_ENV
+      value: "production"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+adminUi:
+  replicaCount: 2
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  env:
+    - name: VITE_API_BASE_URL
+      value: "https://api.waldritter.com"
+    - name: VITE_GOOGLE_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: google-oauth
+          key: client-id
+    - name: VITE_APP_ENV
+      value: "production"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+  tls:
+    enabled: true
+    provider: cert-manager
+    certManager:
+      enabled: true
+      issuer: letsencrypt-prod
+      email: admin@waldritter.com
+  hosts:
+    website:
+      host: waldritter.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: website-ui
+    admin:
+      host: admin.waldritter.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: admin-ui
+    api:
+      host: api.waldritter.com
+      paths:
+        - path: /graphql
+          pathType: Prefix
+          service: content-api
+        - path: /
+          pathType: Prefix
+          service: rails-api
+
+networkPolicy:
+  enabled: true

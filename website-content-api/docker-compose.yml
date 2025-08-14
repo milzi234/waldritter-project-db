@@ -49,6 +49,66 @@ services:
     profiles:
       - dev
 
+  # Git sync sidecar for syncing Obsidian vault from git repository
+  git-sync:
+    image: registry.k8s.io/git-sync/git-sync:v4.1.0
+    container_name: waldritter-content-git-sync
+    volumes:
+      # Shared volume with content-api for synced content
+      - vault-sync:/tmp/git-sync
+    environment:
+      # Git repository configuration
+      - GITSYNC_REPO=${GIT_SYNC_REPO:-https://github.com/example/obsidian-vault.git}
+      - GITSYNC_BRANCH=${GIT_SYNC_BRANCH:-main}
+      - GITSYNC_ROOT=/tmp/git-sync
+      - GITSYNC_LINK=current
+      - GITSYNC_PERIOD=${GIT_SYNC_PERIOD:-60s}
+      - GITSYNC_DEPTH=${GIT_SYNC_DEPTH:-1}
+      # Optional authentication
+      - GITSYNC_USERNAME=${GIT_SYNC_USERNAME:-}
+      - GITSYNC_PASSWORD=${GIT_SYNC_PASSWORD:-}
+      # SSH key path if using SSH
+      - GITSYNC_SSH_KEY_FILE=${GIT_SYNC_SSH_KEY_FILE:-}
+    networks:
+      - waldritter-network
+    profiles:
+      - git-sync
+    restart: unless-stopped
+
+  # Content API with optional git-sync support
+  content-api-with-sync:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waldritter-content-api-sync
+    ports:
+      - "1337:1337"
+    volumes:
+      # Mount synced vault from git-sync container
+      - vault-sync:/app/obsidian-vault:ro
+    environment:
+      - PORT=1337
+      - VAULT_PATH=/app/obsidian-vault/current
+      - ENABLE_PLAYGROUND=true
+      - ENABLE_WATCHER=true
+    restart: unless-stopped
+    networks:
+      - waldritter-network
+    depends_on:
+      - git-sync
+    profiles:
+      - git-sync
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:1337/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  vault-sync:
+    driver: local
+
 networks:
   waldritter-network:
     driver: bridge

@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git
@@ -25,13 +25,20 @@ FROM alpine:latest
 # Install ca-certificates for HTTPS
 RUN apk --no-cache add ca-certificates
 
-WORKDIR /root/
+WORKDIR /app
+
+# Create a non-root user
+RUN addgroup -g 1000 -S app && adduser -u 1000 -S app -G app
 
 # Copy the binary from builder
-COPY --from=builder /app/server .
+COPY --from=builder --chown=app:app /app/server .
+RUN chmod +x ./server
 
 # Copy the Obsidian vault
-COPY --from=builder /app/obsidian-vault ./obsidian-vault
+COPY --from=builder --chown=app:app /app/obsidian-vault ./obsidian-vault
+
+# Switch to non-root user
+USER app
 
 # Expose port
 EXPOSE 1337

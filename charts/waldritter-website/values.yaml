@@ -1,0 +1,299 @@
+# Default values for waldritter-website
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+  domain: "example.com"  # Base domain - will be overridden in environment values
+
+# Content API (Go GraphQL)
+contentApi:
+  enabled: true
+  image:
+    repository: waldritter/content-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 1337
+    targetPort: 1337
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  env:
+    - name: PORT
+      value: "1337"
+    - name: PLAYGROUND_ENABLED
+      value: "true"
+    - name: WATCH_ENABLED
+      value: "true"
+  
+  persistence:
+    enabled: true
+    size: 1Gi
+    mountPath: /root/obsidian-vault
+    accessMode: ReadWriteOnce
+  
+  healthCheck:
+    liveness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+  
+  # Git sync sidecar configuration
+  gitSync:
+    enabled: false  # Enable to sync Obsidian vault from git repository
+    image:
+      repository: registry.k8s.io/git-sync/git-sync
+      tag: v4.1.0
+      pullPolicy: IfNotPresent
+    
+    # Git repository configuration
+    repo: ""  # Required: Git repository URL (https:// or git@)
+    branch: main  # Branch to sync
+    depth: "1"  # Clone depth (1 for shallow clone, 0 for full history)
+    period: "60s"  # Sync interval
+    
+    # Paths configuration
+    root: /tmp/git-sync  # Root directory for git operations
+    link: current  # Symlink name that points to the current sync
+    
+    # Authentication configuration
+    auth:
+      method: none  # Options: none, ssh, https
+      # For HTTPS authentication, create a secret with username and password
+      # For SSH authentication, create a secret with SSH private key
+    
+    # Resource limits for git-sync container
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    
+    # Additional environment variables for git-sync
+    extraEnv: []
+    # - name: GITSYNC_SPARSE_CHECKOUT_FILE
+    #   value: /path/to/sparse-checkout
+
+# Rails API
+railsApi:
+  enabled: true
+  image:
+    repository: waldritter/rails-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  
+  env:
+    - name: RAILS_ENV
+      value: "production"
+    - name: RAILS_LOG_TO_STDOUT
+      value: "true"
+    - name: SECRET_KEY_BASE
+      valueFrom:
+        secretKeyRef:
+          name: rails-secrets
+          key: secret-key-base
+  
+  persistence:
+    database:
+      enabled: true
+      size: 5Gi
+      mountPath: /app/db
+      accessMode: ReadWriteOnce
+    storage:
+      enabled: true
+      size: 10Gi
+      mountPath: /app/storage
+      accessMode: ReadWriteOnce
+  
+  healthCheck:
+    liveness:
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 10
+
+# Website UI (Vue 3 public site)
+websiteUi:
+  enabled: true
+  image:
+    repository: waldritter/website-ui
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 2
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  
+  env: []
+  
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+  
+  healthCheck:
+    liveness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+
+# Admin UI (Vue 3 admin interface)
+adminUi:
+  enabled: true
+  image:
+    repository: waldritter/admin-ui
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  
+  env:
+    - name: VITE_GOOGLE_CLIENT_ID
+      value: ""  # Set in environment-specific values
+  
+  healthCheck:
+    liveness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 10
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  
+  # TLS configuration
+  tls:
+    enabled: true
+    # Use 'mkcert' for local, 'cert-manager' for production
+    provider: mkcert
+    
+    # mkcert configuration (local development)
+    mkcert:
+      secretName: waldritter-local-tls
+    
+    # cert-manager configuration (production)
+    certManager:
+      enabled: false
+      issuer: letsencrypt-prod
+      email: admin@waldritter.com
+  
+  # Host configurations are now dynamically generated from global.domain
+
+# ServiceAccount
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: ingress-nginx
+  egress:
+    - to:
+      - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80

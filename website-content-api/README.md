@@ -53,6 +53,19 @@ docker-compose up -d
 docker-compose --profile dev up content-api-dev
 ```
 
+3. With git sync (syncs Obsidian vault from git repository):
+```bash
+# Set environment variables for git sync
+export GIT_SYNC_REPO=https://github.com/your-org/obsidian-vault.git
+export GIT_SYNC_BRANCH=main
+# For private repos, also set:
+# export GIT_SYNC_USERNAME=your-username
+# export GIT_SYNC_PASSWORD=your-token
+
+# Run with git sync profile
+docker-compose --profile git-sync up -d
+```
+
 ## API Endpoints
 
 - **GraphQL Endpoint**: `http://localhost:1337/graphql`
@@ -284,6 +297,90 @@ go test ./graph -v          # GraphQL integration tests
 - `VAULT_PATH`: Path to content vault
 - `ENABLE_PLAYGROUND`: Enable GraphQL playground
 - `ENABLE_WATCHER`: Enable file watching
+
+### Git Sync Configuration (Optional)
+
+The content API supports automatic synchronization from a git repository using the official Kubernetes git-sync sidecar container. This allows you to manage your Obsidian vault in a git repository and have it automatically synced to the content API.
+
+#### Docker Compose Configuration
+
+Environment variables for git sync when using Docker Compose:
+
+- `GIT_SYNC_REPO`: Git repository URL (required)
+- `GIT_SYNC_BRANCH`: Branch to sync (default: main)
+- `GIT_SYNC_PERIOD`: Sync interval (default: 60s)
+- `GIT_SYNC_DEPTH`: Clone depth (default: 1)
+- `GIT_SYNC_USERNAME`: Username for HTTPS auth (optional)
+- `GIT_SYNC_PASSWORD`: Password/token for HTTPS auth (optional)
+- `GIT_SYNC_SSH_KEY_FILE`: Path to SSH key file (optional)
+
+Example:
+```bash
+export GIT_SYNC_REPO=https://github.com/waldritter/obsidian-vault.git
+export GIT_SYNC_BRANCH=production
+export GIT_SYNC_PERIOD=300s
+docker-compose --profile git-sync up -d
+```
+
+#### Kubernetes/Helm Configuration
+
+When deploying with Helm, configure git sync in your values file:
+
+```yaml
+contentApi:
+  gitSync:
+    enabled: true
+    repo: https://github.com/waldritter/obsidian-vault.git
+    branch: main
+    period: "60s"
+    depth: "1"
+    auth:
+      method: none  # Options: none, ssh, https
+      # For HTTPS:
+      username: your-username
+      password: your-token
+      # For SSH:
+      sshKey: |
+        LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQo=  # Base64 encoded
+```
+
+#### Authentication Methods
+
+1. **Public Repository** (no authentication):
+   ```yaml
+   auth:
+     method: none
+   ```
+
+2. **HTTPS with Personal Access Token**:
+   ```yaml
+   auth:
+     method: https
+     username: your-github-username
+     password: ghp_yourPersonalAccessToken
+   ```
+
+3. **SSH Key Authentication**:
+   ```yaml
+   auth:
+     method: ssh
+     sshKey: |
+       LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+   ```
+
+   Generate base64 encoded SSH key:
+   ```bash
+   cat ~/.ssh/id_rsa | base64 -w 0
+   ```
+
+#### Benefits of Git Sync
+
+- **Version Control**: All content changes tracked in git
+- **Collaboration**: Multiple editors can work on content
+- **CI/CD Integration**: Automated content deployment pipelines
+- **Rollback Capability**: Easy reversion to previous content versions
+- **Backup**: Git repository serves as content backup
+- **Review Process**: Use pull requests for content changes
 
 ## Performance
 

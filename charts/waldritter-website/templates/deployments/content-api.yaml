@@ -1,0 +1,153 @@
+{{- if .Values.contentApi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-content-api
+  labels:
+    {{- include "waldritter-website.contentApi.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.contentApi.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "waldritter-website.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: content-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "waldritter-website.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: content-api
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "waldritter-website.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        {{- if .Values.contentApi.gitSync.enabled }}
+        # Git sync sidecar container
+        - name: git-sync
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.contentApi.gitSync.image.repository }}:{{ .Values.contentApi.gitSync.image.tag }}"
+          imagePullPolicy: {{ .Values.contentApi.gitSync.image.pullPolicy | default "IfNotPresent" }}
+          env:
+            - name: GITSYNC_REPO
+              value: {{ .Values.contentApi.gitSync.repo | quote }}
+            - name: GITSYNC_BRANCH
+              value: {{ .Values.contentApi.gitSync.branch | quote }}
+            - name: GITSYNC_ROOT
+              value: {{ .Values.contentApi.gitSync.root | quote }}
+            - name: GITSYNC_LINK
+              value: {{ .Values.contentApi.gitSync.link | default "current" | quote }}
+            - name: GITSYNC_PERIOD
+              value: {{ .Values.contentApi.gitSync.period | quote }}
+            - name: GITSYNC_DEPTH
+              value: {{ .Values.contentApi.gitSync.depth | quote }}
+            {{- if eq .Values.contentApi.gitSync.auth.method "https" }}
+            - name: GITSYNC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "waldritter-website.fullname" . }}-git-sync
+                  key: username
+                  optional: true
+            - name: GITSYNC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "waldritter-website.fullname" . }}-git-sync
+                  key: password
+                  optional: true
+            {{- else if eq .Values.contentApi.gitSync.auth.method "ssh" }}
+            - name: GITSYNC_SSH_KEY_FILE
+              value: /etc/git-secret/ssh
+            - name: GITSYNC_SSH_KNOWN_HOSTS
+              value: "false"
+            - name: GITSYNC_ADD_USER
+              value: "true"
+            {{- end }}
+            {{- with .Values.contentApi.gitSync.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: git-sync-volume
+              mountPath: {{ .Values.contentApi.gitSync.root }}
+            {{- if eq .Values.contentApi.gitSync.auth.method "ssh" }}
+            - name: git-sync-ssh
+              mountPath: /etc/git-secret
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.contentApi.gitSync.resources | nindent 12 }}
+        {{- end }}
+        - name: content-api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.contentApi.image.repository }}:{{ .Values.contentApi.image.tag }}"
+          imagePullPolicy: {{ .Values.contentApi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.contentApi.service.targetPort }}
+              protocol: TCP
+          {{- with .Values.contentApi.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.contentApi.gitSync.enabled }}
+          env:
+            - name: VAULT_PATH
+              value: "{{ .Values.contentApi.gitSync.root }}/{{ .Values.contentApi.gitSync.link | default "current" }}"
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.contentApi.healthCheck.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.contentApi.healthCheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.contentApi.healthCheck.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.contentApi.healthCheck.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.contentApi.healthCheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.contentApi.healthCheck.readiness.periodSeconds }}
+          resources:
+            {{- toYaml .Values.contentApi.resources | nindent 12 }}
+          volumeMounts:
+          {{- if .Values.contentApi.gitSync.enabled }}
+            - name: git-sync-volume
+              mountPath: {{ .Values.contentApi.gitSync.root }}
+              readOnly: true
+          {{- else if .Values.contentApi.persistence.enabled }}
+            - name: vault-storage
+              mountPath: {{ .Values.contentApi.persistence.mountPath }}
+          {{- end }}
+      volumes:
+      {{- if .Values.contentApi.gitSync.enabled }}
+        - name: git-sync-volume
+          emptyDir: {}
+        {{- if eq .Values.contentApi.gitSync.auth.method "ssh" }}
+        - name: git-sync-ssh
+          secret:
+            secretName: {{ include "waldritter-website.fullname" . }}-git-sync-ssh
+            defaultMode: 0400
+        {{- end }}
+      {{- else if .Values.contentApi.persistence.enabled }}
+        - name: vault-storage
+          persistentVolumeClaim:
+            claimName: {{ include "waldritter-website.fullname" . }}-content-vault
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

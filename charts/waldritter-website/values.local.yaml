@@ -1,0 +1,130 @@
+# Local k3d development values
+global:
+  imageRegistry: "k3d-waldritter-registry.localhost:5000"
+  domain: "wr-dev.de"
+
+# Use local registry images
+contentApi:
+  image:
+    repository: k3d-waldritter-registry.localhost:5000/waldritter/content-api
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  
+  # Example: Enable git sync for local development
+  # gitSync:
+  #   enabled: true
+  #   repo: https://github.com/your-org/obsidian-vault.git
+  #   branch: main
+  #   period: "30s"  # Faster sync for development
+  #   auth:
+  #     method: none  # For public repositories
+  
+  # Example with HTTPS authentication:
+  # gitSync:
+  #   enabled: true
+  #   repo: https://github.com/your-org/private-vault.git
+  #   branch: develop
+  #   auth:
+  #     method: https
+  #     username: your-github-username
+  #     password: your-github-token  # Use a Personal Access Token
+  
+  # Example with SSH authentication:
+  # gitSync:
+  #   enabled: true
+  #   repo: git@github.com:your-org/private-vault.git
+  #   branch: main
+  #   auth:
+  #     method: ssh
+  #     sshKey: |
+  #       LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQo=  # Base64 encoded SSH key
+
+railsApi:
+  image:
+    repository: k3d-waldritter-registry.localhost:5000/waldritter/rails-api
+    pullPolicy: Always
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  env:
+    - name: RAILS_ENV
+      value: "development"
+    - name: RAILS_LOG_TO_STDOUT
+      value: "true"
+    - name: SECRET_KEY_BASE
+      value: "local-development-secret-key-base-replace-in-production"
+    - name: SEED_DATABASE
+      value: "true"
+
+websiteUi:
+  image:
+    repository: k3d-waldritter-registry.localhost:5000/waldritter/website-ui
+    pullPolicy: Always
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  env:
+    # These will be dynamically set based on global.domain in the deployment template
+    - name: VITE_APP_ENV
+      value: "development"
+
+adminUi:
+  image:
+    repository: k3d-waldritter-registry.localhost:5000/waldritter/admin-ui
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8080
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+  env:
+    # These will be dynamically set based on global.domain in the deployment template
+    - name: VITE_GOOGLE_CLIENT_ID
+      value: "415091968444-ngtmjb5h8k5i9mditrjgrh8vduj740km.apps.googleusercontent.com"
+    - name: VITE_APP_ENV
+      value: "development"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    # CORS origins will be dynamically set based on domain
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+  tls:
+    enabled: true
+    provider: mkcert
+    mkcert:
+      secretName: waldritter-local-tls
+  # Hosts configuration - will be dynamically generated from global.domain
+
+# Disable network policies for local development
+networkPolicy:
+  enabled: false

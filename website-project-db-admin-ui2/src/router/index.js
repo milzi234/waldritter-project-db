@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useToken } from '@/composables/auth_token'
-
-const { loggedIn, handleCallback } = useToken()
+import { useGoogleAuth } from '@/composables/google_auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,11 +8,6 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue')
-    },
-    {
-      path: '/login/callback',
-      name: 'login-callback',
-      component: () => import('../views/LoginCallback.vue')
     },
     {
       path: '/projects',
@@ -90,7 +83,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.name !== 'login' && to.name !== 'login-callback' && !loggedIn.value) {
+  const { isLoggedIn } = useGoogleAuth()
+  
+  if (to.name !== 'login' && !isLoggedIn.value) {
     next({ name: 'login' })
   } else {
     next()

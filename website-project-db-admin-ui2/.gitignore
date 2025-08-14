@@ -14,6 +14,14 @@ dist-ssr
 coverage
 *.local
 
+# Environment files with secrets
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+
 /cypress/videos/
 /cypress/screenshots/
 

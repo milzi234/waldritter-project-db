@@ -63,7 +63,6 @@ Rails.application.configure do
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
 
-  config.dex_introspect_url = 'https://auth.waldritter.cisco.local:8443/token/introspect'
-  config.dex_client_id = 'waldritter-project-api'
-  config.dex_client_secret = 'secret'
+  # Google OAuth configuration
+  config.google_client_id = ENV['GOOGLE_CLIENT_ID'] || 'your-client-id.apps.googleusercontent.com'
 end

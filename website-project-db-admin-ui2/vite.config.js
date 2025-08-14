@@ -15,8 +15,9 @@ export default defineConfig({
   },
   server: {
     https: {
-      key: readFileSync(resolve(__dirname, 'local/certs/waldritter.cisco.local+1-key.pem')),
-      cert: readFileSync(resolve(__dirname, 'local/certs/waldritter.cisco.local+1.pem'))
-    }
+      key: readFileSync(resolve(__dirname, 'localhost+2-key.pem')),
+      cert: readFileSync(resolve(__dirname, 'localhost+2.pem'))
+    },
+    port: 5173
   }
 })

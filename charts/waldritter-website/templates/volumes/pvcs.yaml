@@ -1,0 +1,66 @@
+{{- if .Values.contentApi.enabled }}
+{{- if .Values.contentApi.persistence.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-content-vault
+  labels:
+    {{- include "waldritter-website.contentApi.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.contentApi.persistence.accessMode }}
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- else if .Values.contentApi.persistence.storageClass }}
+  storageClassName: {{ .Values.contentApi.persistence.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.contentApi.persistence.size }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.railsApi.enabled }}
+{{- if .Values.railsApi.persistence.database.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-rails-db
+  labels:
+    {{- include "waldritter-website.railsApi.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.railsApi.persistence.database.accessMode }}
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- else if .Values.railsApi.persistence.database.storageClass }}
+  storageClassName: {{ .Values.railsApi.persistence.database.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.railsApi.persistence.database.size }}
+{{- end }}
+
+{{- if .Values.railsApi.persistence.storage.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-rails-storage
+  labels:
+    {{- include "waldritter-website.railsApi.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.railsApi.persistence.storage.accessMode }}
+  {{- if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- else if .Values.railsApi.persistence.storage.storageClass }}
+  storageClassName: {{ .Values.railsApi.persistence.storage.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.railsApi.persistence.storage.size }}
+{{- end }}
+{{- end }}

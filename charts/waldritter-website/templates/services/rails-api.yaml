@@ -1,0 +1,19 @@
+{{- if .Values.railsApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-rails-api
+  labels:
+    {{- include "waldritter-website.railsApi.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.railsApi.service.type }}
+  ports:
+    - port: {{ .Values.railsApi.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "waldritter-website.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: rails-api
+{{- end }}

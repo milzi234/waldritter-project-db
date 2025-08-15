@@ -1,8 +1,11 @@
 Rails.application.routes.draw do
   post "/graphql", to: "graphql#execute"
-  if Rails.env.development?
+  if Rails.env.development? && defined?(GraphiQL)
     mount GraphiQL::Rails::Engine, at: "/graphiql", graphql_path: "/graphql"
   end
+  
+  # Health check endpoint
+  get "/health", to: proc { [200, {}, ["OK"]] }
 
   
   scope "/api" do

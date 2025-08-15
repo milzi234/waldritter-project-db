@@ -1,0 +1,19 @@
+{{- if .Values.adminUi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-admin-ui
+  labels:
+    {{- include "waldritter-website.adminUi.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.adminUi.service.type }}
+  ports:
+    - port: {{ .Values.adminUi.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "waldritter-website.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: admin-ui
+{{- end }}

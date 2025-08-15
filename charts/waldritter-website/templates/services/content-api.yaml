@@ -1,0 +1,19 @@
+{{- if .Values.contentApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-content-api
+  labels:
+    {{- include "waldritter-website.contentApi.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.contentApi.service.type }}
+  ports:
+    - port: {{ .Values.contentApi.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "waldritter-website.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: content-api
+{{- end }}

@@ -1,0 +1,31 @@
+{{- if and .Values.ingress.tls.enabled (eq .Values.ingress.tls.provider "cert-manager") .Values.ingress.tls.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.ingress.tls.certManager.issuer }}
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: {{ .Values.ingress.tls.certManager.email }}
+    privateKeySecretRef:
+      name: {{ .Values.ingress.tls.certManager.issuer }}-account-key
+    solvers:
+    - http01:
+        ingress:
+          class: {{ .Values.ingress.className }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: {{ .Values.ingress.tls.certManager.email }}
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+    - http01:
+        ingress:
+          class: {{ .Values.ingress.className }}
+{{- end }}

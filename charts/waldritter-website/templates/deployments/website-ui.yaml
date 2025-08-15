@@ -1,0 +1,75 @@
+{{- if .Values.websiteUi.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-website-ui
+  labels:
+    {{- include "waldritter-website.websiteUi.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.websiteUi.autoscaling.enabled }}
+  replicas: {{ .Values.websiteUi.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "waldritter-website.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: website-ui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "waldritter-website.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: website-ui
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "waldritter-website.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: website-ui
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.websiteUi.image.repository }}:{{ .Values.websiteUi.image.tag }}"
+          imagePullPolicy: {{ .Values.websiteUi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.websiteUi.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: VITE_GRAPHQL_URI
+              value: "https://api.{{ .Values.global.domain }}/content/graphql"
+            - name: VITE_RAILS_API_URL
+              value: "https://api.{{ .Values.global.domain }}"
+            {{- with .Values.websiteUi.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.websiteUi.healthCheck.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.websiteUi.healthCheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.websiteUi.healthCheck.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.websiteUi.healthCheck.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.websiteUi.healthCheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.websiteUi.healthCheck.readiness.periodSeconds }}
+          resources:
+            {{- toYaml .Values.websiteUi.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

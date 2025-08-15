@@ -1,0 +1,131 @@
+repositories:
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+
+environments:
+  local:
+    values:
+      - env: local
+      - domain: waldritter.local
+      - tlsProvider: mkcert
+      - certManagerEnabled: false
+  
+  staging:
+    values:
+      - env: staging
+      - domain: staging.waldritter.com
+      - tlsProvider: cert-manager
+      - certManagerEnabled: true
+      - certManagerEmail: admin@waldritter.com
+  
+  production:
+    values:
+      - env: production
+      - domain: waldritter.com
+      - tlsProvider: cert-manager
+      - certManagerEnabled: true
+      - certManagerEmail: admin@waldritter.com
+
+releases:
+  # Cert-manager (only for staging/production)
+  - name: cert-manager
+    namespace: cert-manager
+    chart: jetstack/cert-manager
+    version: v1.13.3
+    condition: certManagerEnabled
+    createNamespace: true
+    values:
+      - installCRDs: true
+      - global:
+          leaderElection:
+            namespace: cert-manager
+    hooks:
+      - events: ["postsync"]
+        showlogs: true
+        command: "kubectl"
+        args: ["wait", "--for=condition=ready", "pod", "-l", "app.kubernetes.io/name=cert-manager", "-n", "cert-manager", "--timeout=300s"]
+
+  # Nginx Ingress Controller (optional - if not using k3d's built-in)
+  - name: ingress-nginx
+    namespace: ingress-nginx
+    chart: ingress-nginx/ingress-nginx
+    version: 4.8.3
+    condition: ingressNginxEnabled
+    createNamespace: true
+    values:
+      - controller:
+          service:
+            type: LoadBalancer
+          publishService:
+            enabled: true
+          config:
+            ssl-protocols: "TLSv1.2 TLSv1.3"
+            ssl-ciphers: "HIGH:!aNULL:!MD5"
+    hooks:
+      - events: ["postsync"]
+        showlogs: true
+        command: "kubectl"
+        args: ["wait", "--for=condition=ready", "pod", "-l", "app.kubernetes.io/name=ingress-nginx", "-n", "ingress-nginx", "--timeout=300s"]
+
+  # Waldritter Website Application
+  - name: waldritter
+    namespace: waldritter
+    chart: ./charts/waldritter-website
+    createNamespace: true
+    values:
+      - ./charts/waldritter-website/values.yaml
+      - ./charts/waldritter-website/values.{{ .Values.env }}.yaml
+    secrets:
+      - ./secrets/{{ .Values.env }}/secrets.yaml
+    set:
+      - name: ingress.tls.provider
+        value: {{ .Values.tlsProvider }}
+      - name: ingress.hosts.website.host
+        value: {{ .Values.domain }}
+      - name: ingress.hosts.admin.host
+        value: admin.{{ .Values.domain }}
+      - name: ingress.hosts.api.host
+        value: api.{{ .Values.domain }}
+    needs:
+      - cert-manager
+    hooks:
+      - events: ["prepare"]
+        showlogs: true
+        command: "sh"
+        args:
+          - "-c"
+          - |
+            echo "Preparing deployment for {{ .Values.env }} environment..."
+            if [ "{{ .Values.env }}" = "local" ]; then
+              echo "Local environment - ensure mkcert certificates are created"
+            else
+              echo "{{ .Values.env }} environment - cert-manager will handle certificates"
+            fi
+      
+      - events: ["postsync"]
+        showlogs: true
+        command: "kubectl"
+        args: ["wait", "--for=condition=ready", "pod", "-l", "app.kubernetes.io/instance=waldritter", "-n", "waldritter", "--timeout=300s"]
+      
+      - events: ["postsync"]
+        showlogs: true
+        command: "sh"
+        args:
+          - "-c"
+          - |
+            echo ""
+            echo "Deployment successful!"
+            echo "Access the application at:"
+            echo "  - https://{{ .Values.domain }} (Main website)"
+            echo "  - https://admin.{{ .Values.domain }} (Admin interface)"
+            echo "  - https://api.{{ .Values.domain }} (API endpoints)"
+            echo ""
+
+helmDefaults:
+  wait: true
+  timeout: 600
+  recreatePods: false
+  force: false
+  cleanupOnFail: true

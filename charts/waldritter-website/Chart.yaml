@@ -1,0 +1,17 @@
+apiVersion: v2
+name: waldritter-website
+description: Helm chart for Waldritter Website application suite
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - waldritter
+  - website
+  - rails
+  - vue
+  - graphql
+maintainers:
+  - name: Waldritter Team
+sources:
+  - https://github.com/waldritter/website-unified
+dependencies: []

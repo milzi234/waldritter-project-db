@@ -1,0 +1,32 @@
+{{- if .Values.websiteUi.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}-website-ui
+  labels:
+    {{- include "waldritter-website.websiteUi.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "waldritter-website.fullname" . }}-website-ui
+  minReplicas: {{ .Values.websiteUi.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.websiteUi.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.websiteUi.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.websiteUi.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.websiteUi.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.websiteUi.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

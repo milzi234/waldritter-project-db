@@ -1,0 +1,106 @@
+{{- if .Values.ingress.enabled }}
+{{- $domain := .Values.global.domain }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "waldritter-website.fullname" . }}
+  labels:
+    {{- include "waldritter-website.labels" . | nindent 4 }}
+  annotations:
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{- if ne $key "nginx.ingress.kubernetes.io/cors-allow-origin" }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
+    # Dynamically set CORS allowed origins based on domain
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://{{ $domain }},https://admin.{{ $domain }},https://api.{{ $domain }}"
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    {{- if eq .Values.ingress.tls.provider "mkcert" }}
+    - hosts:
+        - {{ $domain }}
+        - admin.{{ $domain }}
+        - api.{{ $domain }}
+      secretName: {{ .Values.ingress.tls.mkcert.secretName }}
+    {{- else if eq .Values.ingress.tls.provider "cert-manager" }}
+    - hosts:
+        - {{ $domain }}
+        - www.{{ $domain }}
+      secretName: {{ include "waldritter-website.fullname" . }}-website-tls
+    - hosts:
+        - admin.{{ $domain }}
+      secretName: {{ include "waldritter-website.fullname" . }}-admin-tls
+    - hosts:
+        - api.{{ $domain }}
+      secretName: {{ include "waldritter-website.fullname" . }}-api-tls
+    {{- end }}
+  {{- end }}
+  rules:
+    # Main website
+    - host: {{ $domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "waldritter-website.fullname" . }}-website-ui
+                port:
+                  name: http
+    
+    # WWW redirect (if needed)
+    {{- if eq .Values.ingress.tls.provider "cert-manager" }}
+    - host: www.{{ $domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "waldritter-website.fullname" . }}-website-ui
+                port:
+                  name: http
+    {{- end }}
+    
+    # Admin interface
+    - host: admin.{{ $domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "waldritter-website.fullname" . }}-admin-ui
+                port:
+                  name: http
+    
+    # API endpoints
+    - host: api.{{ $domain }}
+      http:
+        paths:
+          - path: /graphql
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "waldritter-website.fullname" . }}-rails-api
+                port:
+                  name: http
+          - path: /content
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "waldritter-website.fullname" . }}-content-api
+                port:
+                  name: http
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "waldritter-website.fullname" . }}-rails-api
+                port:
+                  name: http
+{{- end }}

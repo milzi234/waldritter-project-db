@@ -19,7 +19,7 @@ module WebsiteProjectDbApi
       current_dataloader_source: -> { GraphQL::Current.dataloader_source_class },
     ]
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.0
+    config.load_defaults 8.1
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -37,5 +37,8 @@ module WebsiteProjectDbApi
 
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use ActionDispatch::Session::CookieStore, key: '_waldritter_project_db_api_session'
+
+    # Authentication bypass - disabled by default, enabled in test environment
+    config.skip_authentication = false
   end
 end

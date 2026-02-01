@@ -44,6 +44,7 @@ module Authenticable
   end
 
   def skip_authentication?
-    self.class.skip_authentication_actions.include?(action_name.to_sym)
+    Rails.configuration.skip_authentication ||
+      self.class.skip_authentication_actions.include?(action_name.to_sym)
   end
 end

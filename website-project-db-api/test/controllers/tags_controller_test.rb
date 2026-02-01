@@ -2,35 +2,36 @@ require "test_helper"
 
 class TagsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    @category = categories(:one)
     @tag = tags(:one)
   end
 
   test "should get index" do
-    get tags_url, as: :json
+    get category_tags_url(@category), as: :json
     assert_response :success
   end
 
   test "should create tag" do
     assert_difference("Tag.count") do
-      post tags_url, params: { tag: { category_id: @tag.category_id, description: @tag.description, title: @tag.title } }, as: :json
+      post category_tags_url(@category), params: { tag: { description: @tag.description, title: @tag.title } }, as: :json
     end
 
     assert_response :created
   end
 
   test "should show tag" do
-    get tag_url(@tag), as: :json
+    get category_tag_url(@category, @tag), as: :json
     assert_response :success
   end
 
   test "should update tag" do
-    patch tag_url(@tag), params: { tag: { category_id: @tag.category_id, description: @tag.description, title: @tag.title } }, as: :json
+    patch category_tag_url(@category, @tag), params: { tag: { description: @tag.description, title: @tag.title } }, as: :json
     assert_response :success
   end
 
   test "should destroy tag" do
     assert_difference("Tag.count", -1) do
-      delete tag_url(@tag), as: :json
+      delete category_tag_url(@category, @tag), as: :json
     end
 
     assert_response :no_content

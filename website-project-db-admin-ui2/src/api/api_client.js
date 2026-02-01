@@ -1,4 +1,4 @@
-import axios from '@bundled-es-modules/axios'
+import axios from 'axios'
 import { useGoogleAuth } from '@/composables/google_auth'
 
 // Create axios instance

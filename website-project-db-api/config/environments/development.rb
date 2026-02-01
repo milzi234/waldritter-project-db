@@ -65,4 +65,7 @@ Rails.application.configure do
 
   # Google OAuth configuration
   config.google_client_id = ENV['GOOGLE_CLIENT_ID'] || 'your-client-id.apps.googleusercontent.com'
+
+  # Skip authentication in development (set REQUIRE_AUTH=true to enable)
+  config.skip_authentication = ENV['REQUIRE_AUTH'] != 'true'
 end

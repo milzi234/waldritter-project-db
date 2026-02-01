@@ -1,4 +1,4 @@
-import axios from '@bundled-es-modules/axios/axios.js';
+import axios from 'axios';
 
 class CategoryAPI {
     constructor() {

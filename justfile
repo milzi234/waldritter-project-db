@@ -11,6 +11,10 @@ rails-dev:
 admin-dev:
     cd website-project-db-admin-ui2 && npm run dev
 
+# Run URL Extractor service (port 8000)
+extractor-dev:
+    cd website-url-extractor && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
 # Concurrent Development Commands
 # ================================
 
@@ -20,13 +24,15 @@ dev-all:
     trap 'kill 0' EXIT
 
     echo "Starting all development servers..."
-    echo "=================================="
+    echo "===================================="
     echo "Rails API: http://localhost:3000"
     echo "Admin UI: http://localhost:5173"
-    echo "=================================="
+    echo "URL Extractor: http://localhost:8000"
+    echo "===================================="
 
     (cd website-project-db-api && rails server) &
     (cd website-project-db-admin-ui2 && npm run dev) &
+    (cd website-url-extractor && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000) &
 
     wait
 
@@ -64,6 +70,12 @@ install-all:
     cd website-project-db-admin-ui2 && npm install
     echo "All dependencies installed!"
 
+# Install dependencies for URL extractor service
+extractor-install:
+    echo "Installing URL extractor dependencies..."
+    cd website-url-extractor && pip install -r requirements.txt
+    echo "URL extractor dependencies installed!"
+
 # Fix platform-specific binary issues (e.g., esbuild)
 fix-platform:
     echo "Fixing platform-specific binary issues..."
@@ -88,6 +100,12 @@ status:
         echo "❌ Admin UI is not running"
     fi
 
+    if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
+        echo "✅ URL Extractor is running on port 8000"
+    else
+        echo "❌ URL Extractor is not running"
+    fi
+
 # Kill processes on development ports if stuck
 kill-ports:
     #!/bin/bash
@@ -101,6 +119,11 @@ kill-ports:
     if lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null ; then
         kill -9 $(lsof -t -i:5173)
         echo "Killed process on port 5173"
+    fi
+
+    if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
+        kill -9 $(lsof -t -i:8000)
+        echo "Killed process on port 8000"
     fi
 
     echo "Done!"

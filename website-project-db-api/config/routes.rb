@@ -42,6 +42,9 @@ Rails.application.routes.draw do
       # search
       put '/search', to: "search#search"
 
+      # URL extraction proxy
+      post '/extract', to: "extractions#extract"
+
     end
   end
 end

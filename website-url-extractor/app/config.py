@@ -9,9 +9,14 @@ class Settings(BaseSettings):
 
     # API Keys
     anthropic_api_key: str = ""
+    google_api_key: str = ""
 
     # LLM Configuration
     dspy_lm_model: str = "claude-3-5-haiku-latest"
+
+    # Image Generation Configuration
+    image_model: str = "imagen-4.0-generate-001"
+    image_aspect_ratio: str = "1:1"
 
     # Explorer Safety Limits
     explorer_max_pages: int = 8

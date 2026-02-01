@@ -1,55 +1,61 @@
 """DSPy-based extraction for project and event information."""
 
+import json
+import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
 import dspy
 
+logger = logging.getLogger(__name__)
+
 
 class ExtractProjectInfo(dspy.Signature):
-    """Extract project/organization information from website content."""
+    """Extract project/organization information from website content. Output in German."""
 
     page_content: str = dspy.InputField(desc="Combined markdown content from website pages")
     page_url: str = dspy.InputField(desc="The main URL of the website")
 
-    title: str = dspy.OutputField(desc="Name of the project, group, or organization")
+    title: str = dspy.OutputField(desc="Name des Projekts, der Gruppe oder Organisation auf Deutsch")
     description: str = dspy.OutputField(
-        desc="4-6 sentence description of what this project/org does, its goals, "
-        "target audience, and what makes it unique. Should be informative, engaging, "
-        "and suitable for a project database entry."
+        desc="4-6 Sätze auf Deutsch, die beschreiben was dieses Projekt/Organisation macht, "
+        "ihre Ziele, Zielgruppe und was sie einzigartig macht. Sollte informativ, ansprechend "
+        "und geeignet für einen Projektdatenbank-Eintrag sein. IMMER auf Deutsch schreiben."
     )
     homepage: str = dspy.OutputField(
-        desc="Main website URL (use the provided URL if no better homepage found)"
+        desc="Haupt-Website-URL (verwende die angegebene URL falls keine bessere Homepage gefunden wird)"
     )
     keywords: list[str] = dspy.OutputField(
-        desc="5-10 relevant keywords/topics for this project (in German if content is German)"
+        desc="5-10 relevante Schlüsselwörter/Themen für dieses Projekt, auf Deutsch"
     )
     location: Optional[str] = dspy.OutputField(
-        desc="City or region where this project is based, if mentioned"
+        desc="Stadt oder Region wo dieses Projekt ansässig ist, falls erwähnt"
     )
     contact_email: Optional[str] = dspy.OutputField(
-        desc="Contact email address if found"
+        desc="Kontakt-E-Mail-Adresse falls gefunden"
     )
 
 
 class ExtractEvents(dspy.Signature):
-    """Extract event information from page content, detecting recurrence patterns."""
+    """Extract event/date information from page content. ALWAYS return events if any dates are mentioned."""
 
     page_content: str = dspy.InputField(desc="Markdown content that may contain event information")
 
     events: list[dict] = dspy.OutputField(
-        desc="List of events, each with: "
-        "name (event name/title), "
-        "start_date (ISO datetime like 2024-03-15T19:00:00), "
-        "end_date (ISO datetime or null), "
-        "recurrence_type (none/weekly/monthly-date/monthly-day), "
-        "recurrence_day (day of week for weekly, e.g. 'wednesday'), "
-        "recurrence_week (week of month for monthly-day, e.g. 'first', 'second', 'third', 'fourth', 'last'), "
-        "description (brief event description)"
+        desc="WICHTIG: Wenn Daten/Termine im Text erwähnt werden, MUSS mindestens ein Event zurückgegeben werden. "
+        "Liste von Terminen als JSON array, jeweils mit: "
+        "name (string: Terminname/-titel auf Deutsch), "
+        "start_date (string: ISO datetime wie '2025-10-02T18:00:00'), "
+        "end_date (string: ISO datetime wie '2025-10-05T13:00:00' oder null), "
+        "recurrence_type (string: 'none' für einmalig, 'weekly', 'monthly-date', 'monthly-day'), "
+        "recurrence_day (string oder null: Wochentag für weekly), "
+        "recurrence_week (string oder null: 'first'/'second'/'third'/'fourth'/'last' für monthly-day), "
+        "description (string: kurze Terminbeschreibung auf Deutsch). "
+        "Beispiel: [{'name': 'LARP Event', 'start_date': '2025-10-02T18:00:00', 'end_date': '2025-10-05T13:00:00', "
+        "'recurrence_type': 'none', 'recurrence_day': null, 'recurrence_week': null, 'description': 'Hauptevent'}]"
     )
     recurrence_reasoning: str = dspy.OutputField(
-        desc="Explanation of detected patterns, e.g. 'jeden Mittwoch' → weekly on wednesday, "
-        "'jeden ersten Montag im Monat' → monthly-day on first monday"
+        desc="Erklärung der erkannten Termine und Muster auf Deutsch"
     )
 
 
@@ -112,11 +118,17 @@ class ProjectExtractor:
                 page_url=url,
             )
 
+            # Handle keywords - DSPy sometimes returns a string instead of list
+            keywords = project_result.keywords or []
+            if isinstance(keywords, str):
+                # Split comma-separated string into list
+                keywords = [k.strip() for k in keywords.split(",") if k.strip()]
+
             result.project = ExtractedProject(
                 title=project_result.title,
                 description=project_result.description,
                 homepage=project_result.homepage or url,
-                keywords=project_result.keywords or [],
+                keywords=keywords,
                 location=project_result.location,
                 contact_email=project_result.contact_email,
             )
@@ -132,9 +144,21 @@ class ProjectExtractor:
         try:
             event_result = self.event_extractor(page_content=content_truncated)
 
-            result.recurrence_reasoning = event_result.recurrence_reasoning
+            result.recurrence_reasoning = event_result.recurrence_reasoning or ""
 
-            for event_data in event_result.events or []:
+            # Handle events - DSPy might return string, list, or other formats
+            events_data = event_result.events
+            logger.info(f"Raw events data type: {type(events_data)}, value: {events_data}")
+
+            # If it's a string, try to parse as JSON
+            if isinstance(events_data, str):
+                try:
+                    events_data = json.loads(events_data)
+                except json.JSONDecodeError:
+                    logger.warning(f"Could not parse events as JSON: {events_data}")
+                    events_data = []
+
+            for event_data in events_data or []:
                 if isinstance(event_data, dict):
                     result.events.append(
                         ExtractedEvent(
@@ -147,8 +171,9 @@ class ProjectExtractor:
                             description=event_data.get("description", ""),
                         )
                     )
-        except Exception:
+                    logger.info(f"Added event: {event_data.get('name')}")
+        except Exception as e:
+            logger.exception(f"Event extraction failed: {e}")
             # Events are optional, continue without them
-            pass
 
         return result

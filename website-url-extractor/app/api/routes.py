@@ -1,11 +1,12 @@
 """API routes for the extraction service."""
 
+import base64
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
 
-from ..services import ProjectScraper, SiteExplorer, ProjectExtractor, TagMatcher
+from ..services import ProjectScraper, SiteExplorer, ProjectExtractor, TagMatcher, ImageGenerator
 
 router = APIRouter()
 
@@ -73,11 +74,30 @@ class ExtractResponse(BaseModel):
     exploration_log: list[str] = []
 
 
+# Image generation models
+class GenerateImageRequest(BaseModel):
+    """Request to generate a project thumbnail image."""
+
+    title: str
+    description: str
+    keywords: list[str] = []
+    variation: int = 0  # Variation number for different styles
+
+
+class GenerateImageResponse(BaseModel):
+    """Response with generated image."""
+
+    image_base64: str
+    prompt_used: str
+    reasoning: str
+
+
 # Initialize services (lazy loading)
 _scraper: Optional[ProjectScraper] = None
 _explorer: Optional[SiteExplorer] = None
 _extractor: Optional[ProjectExtractor] = None
 _tag_matcher: Optional[TagMatcher] = None
+_image_generator: Optional[ImageGenerator] = None
 
 
 def get_scraper() -> ProjectScraper:
@@ -106,6 +126,44 @@ def get_tag_matcher() -> TagMatcher:
     if _tag_matcher is None:
         _tag_matcher = TagMatcher()
     return _tag_matcher
+
+
+def get_image_generator() -> ImageGenerator:
+    global _image_generator
+    if _image_generator is None:
+        _image_generator = ImageGenerator()
+    return _image_generator
+
+
+@router.post("/generate-image", response_model=GenerateImageResponse)
+async def generate_image(request: GenerateImageRequest):
+    """
+    Generate a project thumbnail image using AI.
+
+    This endpoint:
+    1. Uses LLM to generate an optimized image prompt from project data
+    2. Calls Gemini image generation to create the image
+    3. Returns the image as base64-encoded PNG
+    """
+    generator = get_image_generator()
+
+    try:
+        image_bytes, prompt_used, reasoning = await generator.generate(
+            title=request.title,
+            description=request.description,
+            keywords=request.keywords,
+            variation=request.variation,
+        )
+
+        return GenerateImageResponse(
+            image_base64=base64.b64encode(image_bytes).decode("utf-8"),
+            prompt_used=prompt_used,
+            reasoning=reasoning,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image generation failed: {e}")
 
 
 @router.post("/extract", response_model=ExtractResponse)

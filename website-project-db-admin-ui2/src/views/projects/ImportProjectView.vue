@@ -39,6 +39,14 @@ const explorationConfidence = ref(0)
 const explorationLog = ref([])
 const showExplorationLog = ref(false)
 
+// Image generation
+const generatedImage = ref(null)
+const isGeneratingImage = ref(false)
+const imageError = ref('')
+const useImage = ref(true)
+const imagePromptUsed = ref('')
+const imageVariation = ref(0)
+
 // Recurrence type options
 const recurrenceOptions = [
   { value: 'none', label: 'Keine Wiederholung' },
@@ -80,9 +88,21 @@ const analyze = async () => {
     if (result.homepage) metadata.push(`**Homepage:** ${result.homepage}`)
     if (result.location) metadata.push(`**Ort:** ${result.location}`)
     if (result.contact_email) metadata.push(`**Kontakt:** ${result.contact_email}`)
+    if (result.keywords && result.keywords.length > 0) {
+      // Format keywords with each pair on a new line for better markdown rendering
+      const keywordPairs = []
+      for (let i = 0; i < result.keywords.length; i += 2) {
+        if (i + 1 < result.keywords.length) {
+          keywordPairs.push(`${result.keywords[i]}, ${result.keywords[i + 1]}`)
+        } else {
+          keywordPairs.push(result.keywords[i])
+        }
+      }
+      metadata.push(`**Schlagwörter:**\n${keywordPairs.join('\n')}`)
+    }
 
     if (metadata.length > 0) {
-      fullDescription += '\n\n' + metadata.join('\n')
+      fullDescription += '\n\n' + metadata.join('\n\n')
     }
     description.value = fullDescription
 
@@ -93,11 +113,14 @@ const analyze = async () => {
       .map(t => t.tag_id)
     tagReasoning.value = result.tag_reasoning || ''
 
-    // Events
+    // Events - convert ISO strings to Date objects for VueDatePicker
     events.value = (result.events || []).map(e => ({
       ...e,
       enabled: true,
-      dates: e.start_date ? [e.start_date, e.end_date] : null
+      dates: e.start_date ? [
+        new Date(e.start_date),
+        e.end_date ? new Date(e.end_date) : null
+      ] : null
     }))
     recurrenceReasoning.value = result.recurrence_reasoning || ''
 
@@ -107,11 +130,42 @@ const analyze = async () => {
     explorationLog.value = result.exploration_log || []
 
     hasExtracted.value = true
+
+    // Start image generation in parallel (don't await)
+    generateProjectImage()
   } catch (e) {
     console.error('Extraction failed:', e)
     error.value = e.response?.data?.error || e.message || 'Extraktion fehlgeschlagen'
   } finally {
     isLoading.value = false
+  }
+}
+
+const generateProjectImage = async (isRegenerate = false) => {
+  isGeneratingImage.value = true
+  imageError.value = ''
+  generatedImage.value = null
+  useImage.value = true
+
+  // Increment variation on regenerate to get a different style
+  if (isRegenerate) {
+    imageVariation.value++
+  }
+
+  try {
+    const result = await extractionAPI.generateImage(
+      title.value,
+      description.value,
+      keywords.value,
+      imageVariation.value
+    )
+    generatedImage.value = `data:image/png;base64,${result.image_base64}`
+    imagePromptUsed.value = result.prompt_used || ''
+  } catch (e) {
+    console.error('Image generation failed:', e)
+    imageError.value = e.response?.data?.error || e.message || 'Bildgenerierung fehlgeschlagen'
+  } finally {
+    isGeneratingImage.value = false
   }
 }
 
@@ -186,15 +240,40 @@ const save = async () => {
       await projectAPI.setProjectTags(project.id, selectedTags.value)
     }
 
-    // 3. Create events
+    // 3. Upload image if generated and user wants to use it
+    if (generatedImage.value && useImage.value) {
+      try {
+        // Convert base64 data URL to blob
+        const response = await fetch(generatedImage.value)
+        const blob = await response.blob()
+
+        // Create FormData with the image
+        const formData = new FormData()
+        formData.append('image', blob, 'project-image.png')
+
+        await projectAPI.uploadImage(project.id, formData)
+      } catch (imgErr) {
+        console.error('Image upload failed:', imgErr)
+        // Continue anyway - project is created
+      }
+    }
+
+    // 4. Create events - convert Date objects to ISO strings for API
     const eventAPI = projectAPI.eventAPIFor(project.id)
     for (const event of events.value) {
       if (!event.enabled || !event.dates || !event.dates[0]) continue
 
+      const startDate = event.dates[0] instanceof Date
+        ? event.dates[0].toISOString()
+        : event.dates[0]
+      const endDate = event.dates[1]
+        ? (event.dates[1] instanceof Date ? event.dates[1].toISOString() : event.dates[1])
+        : startDate
+
       await eventAPI.create({
         name: event.name || title.value,
-        start_date: event.dates[0],
-        end_date: event.dates[1] || event.dates[0],
+        start_date: startDate,
+        end_date: endDate,
         recurrence_type: event.recurrence_type || 'none',
         description: event.description || ''
       })
@@ -297,6 +376,60 @@ const save = async () => {
                 {{ keyword }}
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Preview Card -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Projektbild</h5>
+          <div v-if="generatedImage && useImage" class="btn-group btn-group-sm">
+            <button
+              class="btn btn-outline-secondary"
+              @click="generateProjectImage(true)"
+              :disabled="isGeneratingImage"
+            >
+              Neu generieren
+            </button>
+            <button
+              class="btn btn-outline-danger"
+              @click="useImage = false"
+            >
+              Kein Bild
+            </button>
+          </div>
+        </div>
+        <div class="card-body text-center">
+          <!-- Generating state -->
+          <div v-if="isGeneratingImage" class="py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Bild wird generiert...</p>
+          </div>
+
+          <!-- Image generated and user wants to use it -->
+          <div v-else-if="generatedImage && useImage">
+            <img :src="generatedImage" class="img-fluid rounded" style="max-width: 256px;">
+            <p v-if="imagePromptUsed" class="mt-2 text-muted small">{{ imagePromptUsed }}</p>
+          </div>
+
+          <!-- User chose not to use image -->
+          <div v-else-if="generatedImage && !useImage" class="py-3">
+            <p class="text-muted">Kein Bild wird verwendet</p>
+            <button class="btn btn-sm btn-outline-primary" @click="useImage = true">
+              Generiertes Bild doch verwenden
+            </button>
+          </div>
+
+          <!-- Error state -->
+          <div v-else-if="imageError" class="text-danger py-3">
+            {{ imageError }}
+            <button class="btn btn-sm btn-link" @click="generateProjectImage(true)">Erneut versuchen</button>
+          </div>
+
+          <!-- Not yet generated -->
+          <div v-else class="py-3">
+            <p class="text-muted">Bildgenerierung wird gestartet...</p>
           </div>
         </div>
       </div>

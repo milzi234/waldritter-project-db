@@ -3,7 +3,7 @@ import axios from 'axios';
 class ExtractionAPI {
     constructor() {
         this.api = axios;
-        this.baseURL = 'http://localhost:3000/api/v1/extract';
+        this.baseURL = 'http://localhost:3000/api/v1';
     }
 
     getAuthToken() {
@@ -21,10 +21,23 @@ class ExtractionAPI {
 
     async extract(url) {
         const token = this.getAuthToken();
-        const response = await this.api.post(this.baseURL, { url }, {
+        const response = await this.api.post(`${this.baseURL}/extract`, { url }, {
             headers: { Authorization: `Bearer ${token}` },
             timeout: 120000 // 2 minute timeout for exploration
         });
+        return response.data;
+    }
+
+    async generateImage(title, description, keywords = [], variation = 0) {
+        const token = this.getAuthToken();
+        const response = await this.api.post(
+            `${this.baseURL}/generate_image`,
+            { title, description, keywords, variation },
+            {
+                headers: { Authorization: `Bearer ${token}` },
+                timeout: 60000 // 1 minute timeout for image generation
+            }
+        );
         return response.data;
     }
 }

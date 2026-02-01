@@ -44,4 +44,45 @@ class ExtractionsController < ApplicationController
       render json: { error: "Extraction timed out" }, status: :gateway_timeout
     end
   end
+
+  # POST /api/v1/generate_image
+  # Proxies image generation request to Python service
+  def generate_image
+    title = params[:title]
+    description = params[:description]
+    keywords = params[:keywords] || []
+    variation = params[:variation] || 0
+
+    if title.blank?
+      render json: { error: "Title is required" }, status: :bad_request
+      return
+    end
+
+    extractor_url = ENV.fetch("EXTRACTOR_SERVICE_URL", "http://localhost:8000")
+
+    begin
+      response = HTTParty.post(
+        "#{extractor_url}/api/generate-image",
+        body: {
+          title: title,
+          description: description || "",
+          keywords: keywords,
+          variation: variation.to_i
+        }.to_json,
+        headers: { "Content-Type" => "application/json" },
+        timeout: 60 # Image generation may take time
+      )
+
+      if response.success?
+        render json: response.parsed_response
+      else
+        error_message = response.parsed_response&.dig("detail") || "Image generation failed"
+        render json: { error: error_message }, status: response.code
+      end
+    rescue HTTParty::Error, Errno::ECONNREFUSED => e
+      render json: { error: "Extractor service unavailable: #{e.message}" }, status: :service_unavailable
+    rescue Timeout::Error
+      render json: { error: "Image generation timed out" }, status: :gateway_timeout
+    end
+  end
 end

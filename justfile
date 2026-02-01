@@ -13,7 +13,7 @@ admin-dev:
 
 # Run URL Extractor service (port 8000)
 extractor-dev:
-    cd website-url-extractor && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    cd website-url-extractor && source venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Concurrent Development Commands
 # ================================
@@ -32,7 +32,7 @@ dev-all:
 
     (cd website-project-db-api && rails server) &
     (cd website-project-db-admin-ui2 && npm run dev) &
-    (cd website-url-extractor && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000) &
+    (cd website-url-extractor && source venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000) &
 
     wait
 
@@ -70,11 +70,23 @@ install-all:
     cd website-project-db-admin-ui2 && npm install
     echo "All dependencies installed!"
 
-# Install dependencies for URL extractor service
+# Install dependencies for URL extractor service (uses virtual environment)
 extractor-install:
+    #!/bin/bash
     echo "Installing URL extractor dependencies..."
-    cd website-url-extractor && pip install -r requirements.txt
-    echo "URL extractor dependencies installed!"
+    cd website-url-extractor
+
+    # Create virtual environment if it doesn't exist
+    if [ ! -d "venv" ]; then
+        echo "Creating virtual environment..."
+        python3 -m venv venv
+    fi
+
+    # Activate and install
+    source venv/bin/activate
+    pip install -r requirements.txt
+
+    echo "URL extractor dependencies installed in virtual environment!"
 
 # Fix platform-specific binary issues (e.g., esbuild)
 fix-platform:

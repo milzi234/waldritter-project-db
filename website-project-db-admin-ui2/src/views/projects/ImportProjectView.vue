@@ -21,10 +21,7 @@ const hasExtracted = ref(false)
 // Extracted data
 const title = ref('')
 const description = ref('')
-const homepage = ref('')
 const keywords = ref([])
-const location = ref('')
-const contactEmail = ref('')
 
 // Tags
 const suggestedTags = ref([])
@@ -75,11 +72,19 @@ const analyze = async () => {
 
     // Populate project fields
     title.value = result.title || ''
-    description.value = result.description || ''
-    homepage.value = result.homepage || url.value
     keywords.value = result.keywords || []
-    location.value = result.location || ''
-    contactEmail.value = result.contact_email || ''
+
+    // Build description with metadata appended
+    let fullDescription = result.description || ''
+    const metadata = []
+    if (result.homepage) metadata.push(`**Homepage:** ${result.homepage}`)
+    if (result.location) metadata.push(`**Ort:** ${result.location}`)
+    if (result.contact_email) metadata.push(`**Kontakt:** ${result.contact_email}`)
+
+    if (metadata.length > 0) {
+      fullDescription += '\n\n' + metadata.join('\n')
+    }
+    description.value = fullDescription
 
     // Tags
     suggestedTags.value = result.suggested_tags || []
@@ -172,8 +177,7 @@ const save = async () => {
     // 1. Create project
     const projectData = {
       title: title.value,
-      description: description.value,
-      homepage: homepage.value
+      description: description.value
     }
     const project = await projectAPI.create(projectData)
 
@@ -283,26 +287,8 @@ const save = async () => {
             <input type="text" class="form-control" id="title" v-model="title">
           </div>
           <div class="mb-3">
-            <label for="homepage" class="form-label">Homepage</label>
-            <input type="url" class="form-control" id="homepage" v-model="homepage">
-          </div>
-          <div class="mb-3">
             <label for="description" class="form-label">Beschreibung</label>
-            <textarea class="form-control" id="description" rows="4" v-model="description"></textarea>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label text-muted">Ort</label>
-                <div>{{ location || '-' }}</div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label text-muted">Kontakt-E-Mail</label>
-                <div>{{ contactEmail || '-' }}</div>
-              </div>
-            </div>
+            <textarea class="form-control" id="description" rows="8" v-model="description"></textarea>
           </div>
           <div v-if="keywords.length > 0" class="mb-3">
             <label class="form-label text-muted">Extrahierte Schlüsselwörter</label>

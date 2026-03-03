@@ -1,0 +1,52 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import GlitchHeading from '../components/GlitchHeading.astro';
+import SectionPanel from '../components/SectionPanel.astro';
+import WaldritterLogo from '../components/WaldritterLogo.astro';
+---
+
+<PageLayout title="Info — WALDRITTER">
+  <section class="px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-3xl mx-auto">
+      <GlitchHeading text="INFO" tag="h1" class="mb-8" />
+
+      <SectionPanel class="mb-8">
+        <div class="flex items-start gap-6">
+          <WaldritterLogo class="w-16 h-16 flex-shrink-0 hidden md:block" />
+          <div class="space-y-4 text-gray-300 font-body leading-relaxed">
+            <p>
+              <strong class="text-wald-300">Waldritter e.V.</strong> ist ein gemeinnütziger Verein, der
+              Bildungsprojekte an der Schnittstelle von Abenteuer, Natur und Gemeinschaft entwickelt und durchführt.
+            </p>
+            <p>
+              Diese Projektdatenbank bietet einen Überblick über unsere Projekte, Veranstaltungen
+              und thematischen Schwerpunkte. Alle Daten werden live aus unserer Projektdatenbank geladen.
+            </p>
+          </div>
+        </div>
+      </SectionPanel>
+
+      <SectionPanel class="mb-8">
+        <p class="font-mono text-xs text-gray-500 mb-3">KONTAKT</p>
+        <div class="text-sm text-gray-300 font-body space-y-1">
+          <p>Waldritter e.V.</p>
+          <p>
+            <a href="https://waldritter.de" target="_blank" rel="noopener noreferrer"
+              class="text-wald-400 hover:text-wald-300 transition-colors">
+              waldritter.de
+            </a>
+          </p>
+        </div>
+      </SectionPanel>
+
+      <SectionPanel>
+        <p class="font-mono text-xs text-gray-500 mb-3">SYS::INFO</p>
+        <div class="text-xs font-mono text-gray-500 space-y-1">
+          <p>Frontend: Astro 5 // SSR Mode</p>
+          <p>Design: Cyberpunk Waldritter Theme</p>
+          <p>Datenquelle: GraphQL API</p>
+        </div>
+      </SectionPanel>
+    </div>
+  </section>
+</PageLayout>

@@ -1,0 +1,27 @@
+---
+import TagBadge from './TagBadge.astro';
+import type { Category } from '../lib/types';
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+---
+
+<div class="section-panel">
+  <h3 class="font-display text-sm tracking-wider text-ritter-300 mb-4">
+    {category.title}
+  </h3>
+  {category.description && (
+    <p class="text-xs text-gray-400 mb-4">{category.description}</p>
+  )}
+  <div class="flex flex-wrap gap-2">
+    {category.tags.map(tag => (
+      <TagBadge
+        title={tag.title}
+        href={`/projects/?tags=${encodeURIComponent(tag.title)}`}
+      />
+    ))}
+  </div>
+</div>

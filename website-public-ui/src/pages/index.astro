@@ -1,0 +1,76 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import GlitchHeading from '../components/GlitchHeading.astro';
+import ProjectGrid from '../components/ProjectGrid.astro';
+import CategorySection from '../components/CategorySection.astro';
+import SectionPanel from '../components/SectionPanel.astro';
+import WaldritterLogo from '../components/WaldritterLogo.astro';
+import { fetchProjects, fetchCategories } from '../lib/graphql';
+
+const projects = await fetchProjects({ limit: 6 });
+const categories = await fetchCategories();
+---
+
+<PageLayout>
+  <!-- Hero Section -->
+  <section class="relative px-4 sm:px-6 lg:px-8 pt-12 pb-20">
+    <div class="max-w-7xl mx-auto text-center">
+      <div class="flex justify-center mb-8">
+        <WaldritterLogo class="w-20 h-20 md:w-28 md:h-28" />
+      </div>
+
+      <GlitchHeading text="WALDRITTER" tag="h1" class="mb-4" />
+
+      <p class="font-mono text-sm md:text-base text-gray-400 max-w-2xl mx-auto mb-2">
+        Projektdatenbank // Bildung &middot; Abenteuer &middot; Gemeinschaft
+      </p>
+
+      <div class="flex items-center justify-center gap-2 text-xs font-mono text-wald-400/60 mt-6">
+        <span class="w-1.5 h-1.5 rounded-full bg-wald-400 animate-pulse"></span>
+        <span>DATENBANK::AKTIV // {projects.length} PROJEKTE GELADEN</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Projects -->
+  <section class="px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <GlitchHeading text="PROJEKTE" tag="h2" class="text-2xl md:text-3xl" />
+        <a href="/projects/" class="nav-link text-xs">Alle anzeigen &rarr;</a>
+      </div>
+
+      <ProjectGrid projects={projects} />
+    </div>
+  </section>
+
+  <!-- Categories -->
+  {categories.length > 0 && (
+    <section class="px-4 sm:px-6 lg:px-8 pb-20">
+      <div class="max-w-7xl mx-auto">
+        <GlitchHeading text="THEMEN" tag="h2" class="text-2xl md:text-3xl mb-8" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map(cat => (
+            <CategorySection category={cat} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- System Status Panel -->
+  <section class="px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="max-w-3xl mx-auto">
+      <SectionPanel class="text-center">
+        <p class="font-mono text-xs text-gray-500 mb-2">SYS::STATUS</p>
+        <p class="font-display text-sm tracking-wider text-wald-300">
+          Waldritter e.V. Projektdatenbank
+        </p>
+        <p class="text-xs text-gray-500 mt-2 font-mono">
+          {categories.length} Kategorien // {projects.length}+ Projekte registriert
+        </p>
+      </SectionPanel>
+    </div>
+  </section>
+</PageLayout>

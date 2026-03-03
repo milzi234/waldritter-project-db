@@ -1,0 +1,57 @@
+---
+import HologramImage from './HologramImage.astro';
+import TagBadge from './TagBadge.astro';
+import { formatDate } from '../lib/date-utils';
+import { marked } from 'marked';
+import type { Project } from '../lib/types';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+const nextDate = project.nextOccurrence?.startDate;
+---
+
+<a
+  href={`/projects/${project.id}`}
+  class="group block section-panel p-0 overflow-hidden hover:border-wald-400/30 transition-all duration-500"
+>
+  {project.imageUrl ? (
+    <div class="aspect-video">
+      <HologramImage src={project.imageUrl} alt={project.title} intensity="low" class="w-full h-full" />
+    </div>
+  ) : (
+    <div class="aspect-video bg-wald-950/80 flex items-center justify-center">
+      <span class="font-display text-wald-700 text-xs tracking-[0.3em]">KEIN BILD</span>
+    </div>
+  )}
+
+  <div class="p-5 space-y-3">
+    <h3 class="font-display text-sm tracking-wider text-gray-100 group-hover:text-wald-300 transition-colors line-clamp-2">
+      {project.title}
+    </h3>
+
+    {project.description && (
+      <div class="text-xs text-gray-400 line-clamp-2 font-body prose prose-invert prose-xs prose-p:m-0 prose-headings:m-0 max-w-none" set:html={marked.parse(project.description)} />
+    )}
+
+    {project.tags.length > 0 && (
+      <div class="flex flex-wrap gap-1.5">
+        {project.tags.slice(0, 3).map(tag => (
+          <TagBadge title={tag.title} class="text-[10px] px-2 py-0.5" />
+        ))}
+        {project.tags.length > 3 && (
+          <span class="text-[10px] text-gray-500 font-mono self-center">+{project.tags.length - 3}</span>
+        )}
+      </div>
+    )}
+
+    {nextDate && (
+      <div class="flex items-center gap-2 text-[10px] font-mono text-ritter-400">
+        <span class="w-1 h-1 rounded-full bg-ritter-400 animate-pulse"></span>
+        <span>Nächster Termin: {formatDate(nextDate)}</span>
+      </div>
+    )}
+  </div>
+</a>

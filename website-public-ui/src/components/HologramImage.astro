@@ -1,0 +1,20 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  intensity?: 'low' | 'medium' | 'high';
+  class?: string;
+}
+
+const { src, alt, intensity = 'medium', class: className = '' } = Astro.props;
+---
+
+<div class={`hologram-container hologram-${intensity} rounded-lg ${className}`}>
+  <img
+    src={src}
+    alt={alt}
+    class="w-full h-full object-cover rounded-lg"
+    loading="lazy"
+  />
+  <div class="interference"></div>
+</div>

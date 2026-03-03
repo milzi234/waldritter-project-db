@@ -1,0 +1,30 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import GlitchHeading from '../../components/GlitchHeading.astro';
+import ProjectBrowser from '../../components/ProjectBrowser.vue';
+import { fetchProjects, fetchCategories } from '../../lib/graphql';
+
+const url = new URL(Astro.request.url);
+const tagsParam = url.searchParams.get('tags');
+const tagNames = tagsParam ? tagsParam.split(',').map(t => decodeURIComponent(t)) : [];
+
+const [projects, categories] = await Promise.all([
+  fetchProjects({ tags: tagNames.length > 0 ? tagNames : undefined }),
+  fetchCategories(),
+]);
+---
+
+<PageLayout title="Projekte — WALDRITTER">
+  <section class="px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-7xl mx-auto">
+      <GlitchHeading text="PROJEKTE" tag="h1" class="mb-8" />
+
+      <ProjectBrowser
+        client:load
+        initialProjects={JSON.stringify(projects)}
+        initialCategories={JSON.stringify(categories)}
+        initialTags={JSON.stringify(tagNames)}
+      />
+    </div>
+  </section>
+</PageLayout>

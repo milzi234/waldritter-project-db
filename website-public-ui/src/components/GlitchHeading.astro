@@ -1,0 +1,17 @@
+---
+interface Props {
+  text: string;
+  tag?: 'h1' | 'h2' | 'h3';
+  class?: string;
+}
+
+const { text, tag: Tag = 'h2', class: className = '' } = Astro.props;
+const sizeClass = Tag === 'h1' ? 'text-4xl md:text-6xl' : Tag === 'h2' ? 'text-3xl md:text-4xl' : 'text-2xl md:text-3xl';
+---
+
+<Tag
+  class={`font-display font-bold tracking-wider text-wald-300 glitch-text ${sizeClass} ${className}`}
+  data-text={text}
+>
+  {text}
+</Tag>

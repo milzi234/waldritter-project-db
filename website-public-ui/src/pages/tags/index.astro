@@ -1,0 +1,28 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import GlitchHeading from '../../components/GlitchHeading.astro';
+import CategorySection from '../../components/CategorySection.astro';
+import { fetchCategories } from '../../lib/graphql';
+
+const categories = await fetchCategories();
+const totalTags = categories.reduce((sum, cat) => sum + cat.tags.length, 0);
+---
+
+<PageLayout title="Themen — WALDRITTER">
+  <section class="px-4 sm:px-6 lg:px-8 py-12">
+    <div class="max-w-5xl mx-auto">
+      <GlitchHeading text="THEMEN" tag="h1" class="mb-4" />
+
+      <div class="flex items-center gap-2 mb-10 text-xs font-mono text-gray-500">
+        <span class="w-1 h-1 rounded-full bg-wald-400"></span>
+        <span>{categories.length} Kategorien // {totalTags} Themen registriert</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {categories.map(cat => (
+          <CategorySection category={cat} />
+        ))}
+      </div>
+    </div>
+  </section>
+</PageLayout>

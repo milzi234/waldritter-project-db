@@ -44,6 +44,7 @@ Rails.application.routes.draw do
 
       # URL extraction proxy
       post '/extract', to: "extractions#extract"
+      post '/extract_text', to: "extractions#extract_text"
       post '/generate_image', to: "extractions#generate_image"
 
     end

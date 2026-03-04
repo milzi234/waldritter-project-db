@@ -25,6 +25,12 @@ const router = createRouter({
       component: () => import('../views/projects/ImportProjectView.vue')
     },
     {
+      path: '/project/import-text',
+      name: 'import-text',
+      component: () => import('../views/projects/ImportProjectView.vue'),
+      props: { defaultMode: 'text' }
+    },
+    {
       path: '/projects/:id',
       name: 'view-project',
       component: () => import('../views/projects/ViewProjectView.vue')

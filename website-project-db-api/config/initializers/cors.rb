@@ -11,7 +11,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
             "localhost:5174", "https://localhost:5174", "http://localhost:5174",
             "https://wr-dev.de", "https://admin.wr-dev.de",
             "https://waldritter.de", "https://admin.waldritter.de",
-            "http://wr-dev.de", "http://admin.wr-dev.de"
+            "http://wr-dev.de", "http://admin.wr-dev.de",
+            "https://project-db.waldritter.dev", "https://projects.waldritter.dev"
 
     resource "*",
       headers: :any,

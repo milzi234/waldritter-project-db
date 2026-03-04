@@ -437,8 +437,11 @@ build-api:
     docker build --platform {{platform}} -t {{image_prefix}}/rails-api:latest ./website-project-db-api
 
 # Build the Admin UI image
-build-admin:
-    docker build --platform {{platform}} -t {{image_prefix}}/admin-ui:latest ./website-project-db-admin-ui2
+build-admin google_client_id="415091968444-ngtmjb5h8k5i9mditrjgrh8vduj740km.apps.googleusercontent.com":
+    docker build --platform {{platform}} \
+        --build-arg VITE_API_BASE_URL=https://project-api.waldritter.dev \
+        --build-arg VITE_GOOGLE_CLIENT_ID={{google_client_id}} \
+        -t {{image_prefix}}/admin-ui:latest ./website-project-db-admin-ui2
 
 # Build the URL Extractor image
 build-extractor:
@@ -446,7 +449,10 @@ build-extractor:
 
 # Build the Public UI image
 build-public:
-    docker build --platform {{platform}} -t {{image_prefix}}/public-ui:latest ./website-public-ui
+    docker build --platform {{platform}} \
+        --build-arg API_URL=http://rails-api:3000 \
+        --build-arg PUBLIC_API_URL=https://project-api.waldritter.dev \
+        -t {{image_prefix}}/public-ui:latest ./website-public-ui
 
 # Build all production images
 build-all-images: build-api build-admin build-extractor build-public

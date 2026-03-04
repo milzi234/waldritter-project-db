@@ -3,7 +3,7 @@ import axios from 'axios';
 class ExtractionAPI {
     constructor() {
         this.api = axios;
-        this.baseURL = 'http://localhost:3000/api/v1';
+        this.baseURL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000') + '/api/v1';
     }
 
     getAuthToken() {
@@ -24,6 +24,15 @@ class ExtractionAPI {
         const response = await this.api.post(`${this.baseURL}/extract`, { url }, {
             headers: { Authorization: `Bearer ${token}` },
             timeout: 120000 // 2 minute timeout for exploration
+        });
+        return response.data;
+    }
+
+    async extractFromText(text) {
+        const token = this.getAuthToken();
+        const response = await this.api.post(`${this.baseURL}/extract_text`, { text }, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 120000
         });
         return response.data;
     }

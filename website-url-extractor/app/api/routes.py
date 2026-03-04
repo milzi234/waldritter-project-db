@@ -166,6 +166,92 @@ async def generate_image(request: GenerateImageRequest):
         raise HTTPException(status_code=500, detail=f"Image generation failed: {e}")
 
 
+class ExtractTextRequest(BaseModel):
+    """Request to extract project data from prose text."""
+
+    text: str
+    available_tags: list[TagInput] = []
+
+
+@router.post("/extract-text", response_model=ExtractResponse)
+async def extract_from_text(request: ExtractTextRequest):
+    """
+    Extract project and event data from a prose text description.
+
+    Skips scraping/exploration and feeds the text directly to the extractor.
+    """
+    if not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text is required")
+
+    # Extract project and event info directly from the text
+    extractor = get_extractor()
+    extraction = extractor.extract(
+        content=request.text,
+        url="",
+    )
+
+    # Match tags
+    tag_matches = []
+    tag_reasoning = ""
+
+    if request.available_tags:
+        tag_matcher = get_tag_matcher()
+        tags_for_matching = [
+            {
+                "id": t.id,
+                "name": t.name,
+                "category_name": t.category_name or "",
+            }
+            for t in request.available_tags
+        ]
+
+        match_result = tag_matcher.match(
+            title=extraction.project.title,
+            description=extraction.project.description,
+            keywords=extraction.project.keywords,
+            available_tags=tags_for_matching,
+        )
+
+        tag_matches = [
+            TagMatchResponse(
+                tag_id=m.tag_id,
+                tag_name=m.tag_name,
+                category_name=m.category_name,
+                score=m.score,
+                match_type=m.match_type,
+            )
+            for m in match_result.matches
+        ]
+        tag_reasoning = match_result.reasoning
+
+    return ExtractResponse(
+        title=extraction.project.title,
+        description=extraction.project.description,
+        homepage=extraction.project.homepage,
+        keywords=extraction.project.keywords,
+        location=extraction.project.location,
+        contact_email=extraction.project.contact_email,
+        events=[
+            ExtractedEventResponse(
+                name=e.name,
+                start_date=e.start_date,
+                end_date=e.end_date,
+                recurrence_type=e.recurrence_type,
+                recurrence_day=e.recurrence_day,
+                recurrence_week=e.recurrence_week,
+                description=e.description,
+            )
+            for e in extraction.events
+        ],
+        recurrence_reasoning=extraction.recurrence_reasoning,
+        suggested_tags=tag_matches,
+        tag_reasoning=tag_reasoning,
+        pages_explored=0,
+        exploration_confidence=1.0,
+        exploration_log=["Text input provided directly"],
+    )
+
+
 @router.post("/extract", response_model=ExtractResponse)
 async def extract_from_url(request: ExtractRequest):
     """

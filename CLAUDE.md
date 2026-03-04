@@ -113,18 +113,85 @@ The URL extractor (`website-url-extractor/`) uses LLM-driven exploration to extr
 ### Architecture
 - **Agentic exploration**: LLM decides which pages to visit based on what information is missing
 - **DSPy signatures**: Structured prompts for analysis, link prioritization, and extraction
-- **Semantic tag matching**: Uses multilingual embeddings + LLM suggestions to match tags
+- **Tag matching**: Keyword matching + LLM suggestions (no embeddings)
 
 ### Key Components
 - `app/services/scraper.py` - Web scraping with BeautifulSoup
 - `app/services/explorer.py` - LLM-driven site exploration
 - `app/services/extractor.py` - DSPy extraction for projects and events
-- `app/services/tag_matcher.py` - Semantic tag matching with embeddings
+- `app/services/tag_matcher.py` - Keyword + LLM tag matching
 - `app/api/routes.py` - FastAPI endpoint (`POST /api/extract`)
 
 ### Configuration
 Copy `.env.example` to `.env` and set:
 - `ANTHROPIC_API_KEY` - Required for LLM calls
-- `DSPY_LM_MODEL` - Model to use (default: claude-3-5-haiku-latest)
+- `DSPY_LM_MODEL` - Model to use (default: claude-haiku-4-5-20251001)
 - `EXPLORER_MAX_PAGES` - Maximum pages to explore (default: 8)
 - `EXPLORER_MIN_CONFIDENCE` - Stop exploring when confidence reaches this (default: 0.7)
+
+## Production Deployment
+
+Services are deployed to a k3s cluster on `stauchen.events` via ArgoCD with Kustomize manifests.
+
+### Domain Mapping
+
+| Subdomain | Service | Port |
+|---|---|---|
+| `project-api.waldritter.dev` | rails-api | 3000 |
+| `project-db.waldritter.dev` | admin-ui | 8080 |
+| `projects.waldritter.dev` | public-ui (Astro SSR) | 4321 |
+| (cluster-internal only) | url-extractor | 8000 |
+
+### Build, Push, Restart Workflow
+
+Images are cross-compiled for `linux/amd64` and transferred via `docker save | scp | ctr import`.
+
+```bash
+# Build individual images
+just build-api          # Rails API
+just build-admin        # Admin UI (bakes in VITE_GOOGLE_CLIENT_ID)
+just build-extractor    # URL Extractor
+just build-public       # Public UI (Astro SSR, bakes in API_URL)
+
+# Build all
+just build-all-images
+
+# Push individual images to server
+just push-api
+just push-admin
+just push-extractor
+just push-public
+
+# Push all
+just push-all
+
+# Convenience: build + push all
+just ship
+
+# Restart a service after pushing (via kubectl over SSH)
+ssh root@stauchen.events "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl rollout restart deployment/<name> -n waldritter"
+# where <name> is: rails-api, admin-ui, public-ui, url-extractor
+
+# Check deployment status
+just prod-status
+
+# View logs
+just prod-logs <service>   # e.g. just prod-logs rails-api
+```
+
+### Secrets Management
+
+Secrets are stored in `secrets/production/secrets.yaml` (gitignored) and deployed via:
+```bash
+just deploy-secrets
+```
+
+### Key Deployment Notes
+
+- **Admin UI** (`VITE_*` vars): Baked in at Docker build time. Rebuild image to change.
+- **Public UI** (`API_URL`): Set as runtime env var in Dockerfile + deployment.yaml. Internal API calls use `http://rails-api:3000`.
+- **Rails API**: SQLite on PVC at `/data/db` (not `/app/db` — avoids shadowing migrations). Uses `DATABASE_PATH` env var.
+- **url-extractor**: ClusterIP only (no ingress). Rails proxies to it via `EXTRACTOR_SERVICE_URL`.
+- **ArgoCD**: Auto-syncs from `deploy/production/` in the GitHub repo. Direct `kubectl apply` changes get reverted — always commit and push, then ArgoCD picks it up.
+- **Images**: Must be `--platform linux/amd64` (server is amd64, Mac builds arm64 by default).
+- **Registry GC**: Run `just registry-gc` to clean up old image layers.

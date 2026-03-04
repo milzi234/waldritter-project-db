@@ -45,6 +45,50 @@ class ExtractionsController < ApplicationController
     end
   end
 
+  # POST /api/v1/extract_text
+  # Proxies text extraction request to Python service
+  def extract_text
+    text = params[:text]
+
+    if text.blank?
+      render json: { error: "Text is required" }, status: :bad_request
+      return
+    end
+
+    available_tags = Tag.includes(:category).map do |tag|
+      {
+        id: tag.id,
+        name: tag.title,
+        category_name: tag.category&.title || ""
+      }
+    end
+
+    extractor_url = ENV.fetch("EXTRACTOR_SERVICE_URL", "http://localhost:8000")
+
+    begin
+      response = HTTParty.post(
+        "#{extractor_url}/api/extract-text",
+        body: {
+          text: text,
+          available_tags: available_tags
+        }.to_json,
+        headers: { "Content-Type" => "application/json" },
+        timeout: 120
+      )
+
+      if response.success?
+        render json: response.parsed_response
+      else
+        error_message = response.parsed_response&.dig("detail") || "Text extraction failed"
+        render json: { error: error_message }, status: response.code
+      end
+    rescue HTTParty::Error, Errno::ECONNREFUSED => e
+      render json: { error: "Extractor service unavailable: #{e.message}" }, status: :service_unavailable
+    rescue Timeout::Error
+      render json: { error: "Extraction timed out" }, status: :gateway_timeout
+    end
+  end
+
   # POST /api/v1/generate_image
   # Proxies image generation request to Python service
   def generate_image

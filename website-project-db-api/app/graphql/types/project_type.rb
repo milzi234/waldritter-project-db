@@ -33,7 +33,7 @@ module Types
 
     field :next_occurrence, Types::OccurrenceType, null: true
     def next_occurrence
-      object.occurrences.where("start_date >= ?", Time.current).order(:start_date).first
+      object.occurrences.where("occurrences.start_date >= ?", Time.current).order("occurrences.start_date").first
     end
   end
 end

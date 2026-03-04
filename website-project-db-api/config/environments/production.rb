@@ -84,6 +84,10 @@ Rails.application.configure do
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
   
+  # Default URL options for Active Storage and url_for
+  routes.default_url_options[:host] = ENV.fetch('DEFAULT_HOST', 'project-api.waldritter.dev')
+  routes.default_url_options[:protocol] = ENV.fetch('DEFAULT_PROTOCOL', 'https')
+
   # Google OAuth configuration
   config.google_client_id = ENV['GOOGLE_CLIENT_ID']
 end

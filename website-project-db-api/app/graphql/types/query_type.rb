@@ -4,8 +4,8 @@ module Types
   class QueryType < Types::BaseObject
     # Projects
     field :projects, [Types::ProjectType], null: false, description: "Get all projects with optional filtering" do
-      argument :tag_ids, [ID], required: false, description: "Filter by tag IDs (AND logic)"
-      argument :tags, [String], required: false, description: "Filter by tag titles (case-insensitive, AND logic)"
+      argument :tag_ids, [ID], required: false, description: "Filter by tag IDs (OR within category, AND across categories)"
+      argument :tags, [String], required: false, description: "Filter by tag titles (OR within category, AND across categories)"
       argument :limit, Integer, required: false, description: "Maximum number of projects to return"
       argument :offset, Integer, required: false, description: "Number of projects to skip"
     end
@@ -13,18 +13,21 @@ module Types
     def projects(tag_ids: nil, tags: nil, limit: nil, offset: nil)
       result = Project.includes(:tags).all
 
-      # Filter by tag IDs if provided (AND logic - project must have ALL specified tags)
+      # Filter by tag IDs: OR within same category, AND across categories
       if tag_ids.present?
-        tag_ids.each do |tag_id|
-          result = result.joins(:tags).where(tags: { id: tag_id })
+        tags_by_category = Tag.where(id: tag_ids).group_by(&:category_id)
+        tags_by_category.each_value do |category_tags|
+          result = result.where(id: Project.joins(:tags).where(tags: { id: category_tags.map(&:id) }).select(:id))
         end
         result = result.distinct
       end
 
-      # Filter by tag titles if provided (case-insensitive, AND logic)
+      # Filter by tag titles: OR within same category, AND across categories
       if tags.present?
-        tags.each do |tag_title|
-          result = result.joins(:tags).where("LOWER(tags.title) = LOWER(?)", tag_title)
+        found_tags = Tag.where("LOWER(title) IN (?)", tags.map(&:downcase))
+        tags_by_category = found_tags.group_by(&:category_id)
+        tags_by_category.each_value do |category_tags|
+          result = result.where(id: Project.joins(:tags).where(tags: { id: category_tags.map(&:id) }).select(:id))
         end
         result = result.distinct
       end
@@ -40,23 +43,26 @@ module Types
 
     # Project count (for pagination)
     field :projects_count, Integer, null: false, description: "Get total count of projects matching filters" do
-      argument :tag_ids, [ID], required: false, description: "Filter by tag IDs (AND logic)"
-      argument :tags, [String], required: false, description: "Filter by tag titles (case-insensitive, AND logic)"
+      argument :tag_ids, [ID], required: false, description: "Filter by tag IDs (OR within category, AND across categories)"
+      argument :tags, [String], required: false, description: "Filter by tag titles (OR within category, AND across categories)"
     end
 
     def projects_count(tag_ids: nil, tags: nil)
       result = Project.all
 
       if tag_ids.present?
-        tag_ids.each do |tag_id|
-          result = result.joins(:tags).where(tags: { id: tag_id })
+        tags_by_category = Tag.where(id: tag_ids).group_by(&:category_id)
+        tags_by_category.each_value do |category_tags|
+          result = result.where(id: Project.joins(:tags).where(tags: { id: category_tags.map(&:id) }).select(:id))
         end
         result = result.distinct
       end
 
       if tags.present?
-        tags.each do |tag_title|
-          result = result.joins(:tags).where("LOWER(tags.title) = LOWER(?)", tag_title)
+        found_tags = Tag.where("LOWER(title) IN (?)", tags.map(&:downcase))
+        tags_by_category = found_tags.group_by(&:category_id)
+        tags_by_category.each_value do |category_tags|
+          result = result.where(id: Project.joins(:tags).where(tags: { id: category_tags.map(&:id) }).select(:id))
         end
         result = result.distinct
       end

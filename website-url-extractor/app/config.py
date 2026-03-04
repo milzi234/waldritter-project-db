@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""
 
     # LLM Configuration
-    dspy_lm_model: str = "claude-3-5-haiku-latest"
+    dspy_lm_model: str = "claude-haiku-4-5-20251001"
 
     # Image Generation Configuration
     image_model: str = "imagen-4.0-generate-001"

@@ -39,6 +39,8 @@ EXPOSE 4321
 
 ENV HOST=0.0.0.0
 ENV PORT=4321
+ENV API_URL=http://rails-api:3000
+ENV PUBLIC_API_URL=https://project-api.waldritter.dev
 
 # Start the Astro SSR server
 CMD ["node", "./dist/server/entry.mjs"]

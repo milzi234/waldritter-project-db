@@ -7,16 +7,8 @@
 
 </script>
 <template>
-  <span> <RouterLink :to='{name: "view-tag", params: {categoryID: categoryID, id: id}}' class="badge bg-primary tag-pill">{{ title }}</RouterLink> </span>
+  <RouterLink
+    :to='{name: "view-tag", params: {categoryID: categoryID, id: id}}'
+    class="badge-cyber no-underline hover:bg-wald-500/30 transition-colors"
+  >{{ title }}</RouterLink>
 </template>
-
-<style>
-.tag-pill {
-  text-decoration: none;
-  color: white;
-}
-
-.tag-pill:hover {
-  color: lightcyan;
-}
-</style>

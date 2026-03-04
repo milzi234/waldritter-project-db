@@ -49,7 +49,7 @@
     let modified = false
 
     if (newDate.value != null) {
-      disabled = newDate.value.length == 0 // Disable save if no date is selected
+      disabled = newDate.value.length == 0
       modified = true
     } else {
       modified = false
@@ -179,67 +179,58 @@
 </script>
 
 <template>
-<h1>Terminplanung - {{ title }}</h1>
-<div class="container">
-  <div class="row">
-    <div class="col">
-      <img v-if="image" :src="image" alt="Project image" width="200" height="200" > 
-    </div>
+<h1 class="text-2xl font-display font-bold text-wald-300 mb-6">Terminplanung - {{ title }}</h1>
+<div class="space-y-6">
+  <div v-if="image">
+    <img :src="image" alt="Project image" class="w-48 h-48 object-cover rounded border border-wald-500/20">
   </div>
-  <div class="row">
-    <div class="col" style="margin-top: 2rem">
-      <span class="text-muted">{{ description }}</span>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col" style="margin-top: 2rem">
-      <h2>Termine</h2>
-    </div>
-  </div>
-  <div v-for="(event, index) in events" :key="event.id">
-    <div class="row">
-      <div class="col" v-if="dates[index]">
-        <VueDatePicker v-model="dates[index]" locale="de" cancelText="abbrechen" selectText="auswählen" :format="format" range></VueDatePicker>
+
+  <p v-if="description" class="text-gray-500 text-sm">{{ description }}</p>
+
+  <div>
+    <h2 class="text-lg font-display text-wald-400 mb-4">Termine</h2>
+
+    <div v-for="(event, index) in events" :key="event.id" class="section-panel !p-4 mb-4 space-y-3">
+      <div v-if="dates[index]">
+        <VueDatePicker v-model="dates[index]" locale="de" cancelText="abbrechen" selectText="auswählen" :format="format" range dark></VueDatePicker>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="#" @click.prevent="toggleRecurring(event)" class="text-sm">Wiederholungen</a>
+        <span class="text-gray-500 text-xs font-mono">({{ recurrenceLabel(recurrenceTypes[index].recurrence_type, dates[index]) }})</span>
+        <RouterLink v-if="recurrenceTypes[index].recurrence_type != 'none' && !dirty" :to="{ name: 'edit-occurrences', params: {project_id: route.params.id, id: event.id}}" class="text-sm">Ausnahmen</RouterLink>
+      </div>
+      <div v-if="showRecurring[event.id]" class="space-y-2 pl-1">
+        <label class="flex items-center gap-2 !mb-0 cursor-pointer">
+          <input type="radio" :name="'repeat-'+event.id" value="none" v-model="recurrenceTypes[index].recurrence_type">
+          <span class="text-sm text-gray-300 normal-case tracking-normal">Keine Wiederholung</span>
+        </label>
+        <label class="flex items-center gap-2 !mb-0 cursor-pointer">
+          <input type="radio" :name="'repeat-'+event.id" value="weekly" v-model="recurrenceTypes[index].recurrence_type">
+          <span class="text-sm text-gray-300 normal-case tracking-normal">{{ weeklyLabel(dates[index]) }}</span>
+        </label>
+        <label class="flex items-center gap-2 !mb-0 cursor-pointer">
+          <input type="radio" :name="'repeat-'+event.id" value="monthly-date" v-model="recurrenceTypes[index].recurrence_type">
+          <span class="text-sm text-gray-300 normal-case tracking-normal">{{ monthlyDateLabel(dates[index]) }}</span>
+        </label>
+        <label class="flex items-center gap-2 !mb-0 cursor-pointer">
+          <input type="radio" :name="'repeat-'+event.id" value="monthly-day" v-model="recurrenceTypes[index].recurrence_type">
+          <span class="text-sm text-gray-300 normal-case tracking-normal">{{ monthlyDayLabel(dates[index]) }}</span>
+        </label>
       </div>
     </div>
-    <div class="row">
-      <div class="col-md-6">
-        <a href="#" name="Wiederholungen" @click.prevent="toggleRecurring(event)">Wiederholungen</a> <span class="text-muted">({{ recurrenceLabel(recurrenceTypes[index].recurrence_type, dates[index]) }})</span>
-      </div>
-      <div class="col-md-6">
-        <RouterLink v-if="recurrenceTypes[index].recurrence_type != 'none' && !dirty" :to="{ name: 'edit-occurrences', params: {project_id: route.params.id, id: event.id}}">Ausnahmen</RouterLink>
-      </div>
+
+    <div v-if="newDate" class="section-panel !p-4 mb-4">
+      <VueDatePicker v-model="newDate" locale="de" cancelText="abbrechen" selectText="auswählen" :format="format" range dark></VueDatePicker>
     </div>
-    <div class="row" v-if="showRecurring[event.id]">
-      <div class="col">
-        <input type="radio" id="none" name="repeat" value="none" v-model="recurrenceTypes[index].recurrence_type">
-        <label for="none">&nbsp;Keine Wiederholung</label><br>
-        <input type="radio" id="weekly" name="repeat" value="weekly" v-model="recurrenceTypes[index].recurrence_type">
-        <label for="weekly">&nbsp;{{ weeklyLabel(dates[index]) }}</label><br>
-        <input type="radio" id="monthly-date" name="repeat" value="monthly-date" v-model="recurrenceTypes[index].recurrence_type">
-        <label for="monthly-date">&nbsp;{{ monthlyDateLabel(dates[index]) }}</label><br>
-        <input type="radio" id="monthly-day" name="repeat" value="monthly-day" v-model="recurrenceTypes[index].recurrence_type">
-        <label for="monthly-day">&nbsp;{{ monthlyDayLabel(dates[index]) }}</label>
-      </div>
+
+    <div class="flex gap-3 mt-6">
+      <button type="button" class="btn-cyber" v-if="dirty" :disabled="saveDisabled" @click.prevent="save">Speichern</button>
+      <button type="button" class="btn-cyber-danger" v-if="dirty" :disabled="saveDisabled" @click.prevent="cancel">Abbrechen</button>
+      <button type="button" class="btn-cyber" @click.prevent="createEvent" v-if="!dirty">Neuer Termin</button>
     </div>
-  </div>
-  <div class="row" v-if="newDate">
-    <div class="col">
-      <VueDatePicker v-model="newDate" locale="de" cancelText="abbrechen" selectText="auswählen" :format="format" range></VueDatePicker>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      <div class="functions" style="margin-top: 2rem">
-        <button type="button" class="btn btn-success" v-if="dirty" :disabled="saveDisabled"  @click.prevent="save" style="margin-right:1rem">Speichern</button>
-        <button type="button" class="btn btn-danger"  v-if="dirty" :disabled="saveDisabled"  @click.prevent="cancel">Abbrechen</button>
-        <button type="button" class="btn btn-primary" @click.prevent="createEvent" v-if="!dirty">Neuer Termin</button>
-      </div>
-      <div class="functions" style="margin-top: 2rem">
-        <button type="button" class="btn btn-secondary" @click="$router.go(-1)">Zurück</button>
-      </div>
+    <div class="mt-4">
+      <button type="button" class="btn-cyber-secondary" @click="$router.go(-1)">Zurück</button>
     </div>
   </div>
 </div>
 </template>
-

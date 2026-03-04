@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --glow-wald: rgba(27, 174, 112, 0.5);
+    --glow-ritter: rgba(212, 160, 23, 0.5);
+    --glow-green: rgba(0, 255, 136, 0.5);
+    --grid-color: rgba(27, 174, 112, 0.07);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-black text-gray-200 font-body;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 60px 60px;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
+    z-index: 9999;
+  }
+
+  ::selection {
+    @apply bg-wald-500/40 text-white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-black;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-wald-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-wald-500;
+  }
+
+  /* Form inputs */
+  input[type="text"],
+  input[type="url"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="file"],
+  textarea,
+  select {
+    @apply w-full bg-black/60 border border-wald-500/30 text-gray-200 rounded px-3 py-2 text-sm;
+    @apply focus:border-wald-400 focus:ring-1 focus:ring-wald-500/25 focus:outline-none;
+    @apply placeholder:text-gray-600;
+  }
+
+  input[type="file"] {
+    @apply py-1.5;
+  }
+
+  input[type="checkbox"] {
+    @apply bg-black/60 border-wald-500/30 text-wald-500 rounded focus:ring-wald-500/25;
+  }
+
+  input[type="radio"] {
+    @apply bg-black/60 border-wald-500/30 text-wald-500 focus:ring-wald-500/25;
+  }
+
+  label {
+    @apply block text-xs font-mono uppercase tracking-wider text-gray-500 mb-1;
+  }
+
+  a {
+    @apply text-wald-400 hover:text-wald-300 transition-colors;
+  }
+}
+
+@layer components {
+  /* Section panel */
+  .section-panel {
+    @apply relative p-6 rounded-lg bg-gray-950/60 backdrop-blur-sm;
+    border: 1px solid rgba(27, 174, 112, 0.15);
+  }
+
+  .section-panel::before {
+    content: '';
+    @apply absolute inset-0 rounded-lg;
+    background: linear-gradient(135deg, rgba(27, 174, 112, 0.05) 0%, transparent 50%, rgba(212, 160, 23, 0.05) 100%);
+    pointer-events: none;
+  }
+
+  /* Glow border */
+  .glow-border {
+    @apply border border-wald-500/30;
+    box-shadow: 0 0 15px -3px var(--glow-wald), inset 0 0 15px -3px var(--glow-wald);
+  }
+
+  /* Glitch text */
+  .glitch-text {
+    @apply relative;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    @apply absolute top-0 left-0 w-full h-full;
+  }
+
+  .glitch-text::before {
+    @apply text-ritter-400;
+    clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+    animation: glitch-shift 12s infinite linear alternate-reverse;
+  }
+
+  .glitch-text::after {
+    @apply text-wald-400;
+    clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+    animation: glitch-shift 9s infinite linear alternate-reverse;
+  }
+
+  @keyframes glitch-shift {
+    0%, 95%, 100% { transform: translate(0); }
+    96% { transform: translate(-2px, 1px); }
+    97% { transform: translate(2px, -1px); }
+    98% { transform: translate(-1px, 2px); }
+    99% { transform: translate(1px, -2px); }
+  }
+
+  /* Nav link */
+  .nav-link {
+    @apply relative text-gray-400 hover:text-wald-300 transition-colors duration-300 font-mono text-sm tracking-wider uppercase px-3 py-1;
+  }
+
+  .nav-link::after {
+    content: '';
+    @apply absolute -bottom-1 left-0 w-0 h-px bg-gradient-to-r from-wald-500 to-ritter-500 transition-all duration-300;
+  }
+
+  .nav-link:hover::after,
+  .nav-link.router-link-active::after {
+    @apply w-full;
+  }
+
+  .nav-link.router-link-active {
+    @apply text-wald-300;
+  }
+
+  /* Buttons */
+  .btn-cyber {
+    @apply px-4 py-2 bg-gradient-to-r from-wald-500 to-wald-600 text-white font-mono uppercase text-sm tracking-wider rounded;
+    @apply hover:from-wald-400 hover:to-wald-500 transition-all duration-200;
+    @apply hover:shadow-[0_0_15px_rgba(27,174,112,0.5)];
+    @apply disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none;
+  }
+
+  .btn-cyber-danger {
+    @apply px-4 py-2 bg-gradient-to-r from-red-700 to-red-800 text-white font-mono uppercase text-sm tracking-wider rounded;
+    @apply hover:from-red-600 hover:to-red-700 transition-all duration-200;
+    @apply hover:shadow-[0_0_15px_rgba(239,68,68,0.4)];
+    @apply disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-cyber-secondary {
+    @apply px-4 py-2 border border-gray-600 text-gray-400 font-mono uppercase text-sm tracking-wider rounded;
+    @apply hover:border-gray-400 hover:text-gray-200 transition-all duration-200;
+    @apply disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-cyber-sm {
+    @apply px-3 py-1 text-xs;
+  }
+
+  .btn-cyber-outline {
+    @apply px-4 py-2 border border-wald-500/30 text-wald-400 font-mono uppercase text-sm tracking-wider rounded;
+    @apply hover:border-wald-400 hover:text-wald-300 hover:bg-wald-500/10 transition-all duration-200;
+    @apply disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* Badge */
+  .badge-cyber {
+    @apply px-2 py-0.5 text-xs font-mono uppercase tracking-wider border border-wald-500/30 bg-wald-500/20 text-wald-300 rounded-full;
+  }
+
+  /* Alert */
+  .alert-danger {
+    @apply border border-red-500/30 bg-red-900/20 text-red-400 px-4 py-3 rounded text-sm;
+  }
+
+  /* Progress bar */
+  .progress-cyber {
+    @apply w-full h-2.5 bg-gray-800 rounded-full overflow-hidden;
+  }
+
+  .progress-cyber-bar {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  .progress-cyber-bar.high {
+    @apply bg-gradient-to-r from-wald-500 to-wald-400;
+  }
+
+  .progress-cyber-bar.medium {
+    @apply bg-gradient-to-r from-ritter-500 to-ritter-400;
+  }
+
+  .progress-cyber-bar.low {
+    @apply bg-gradient-to-r from-red-600 to-red-500;
+  }
+
+  /* VueDatePicker dark mode overrides */
+  .dp__theme_dark {
+    --dp-background-color: rgba(0, 0, 0, 0.8);
+    --dp-text-color: #e5e7eb;
+    --dp-hover-color: rgba(27, 174, 112, 0.2);
+    --dp-hover-text-color: #00FF88;
+    --dp-primary-color: #159458;
+    --dp-primary-text-color: #fff;
+    --dp-secondary-color: #374151;
+    --dp-border-color: rgba(27, 174, 112, 0.3);
+    --dp-menu-border-color: rgba(27, 174, 112, 0.3);
+    --dp-border-color-hover: #1BAE70;
+    --dp-disabled-color: #1f2937;
+    --dp-range-between-dates-background-color: rgba(27, 174, 112, 0.15);
+    --dp-range-between-dates-text-color: #e5e7eb;
+    --dp-range-between-border-color: rgba(27, 174, 112, 0.3);
+  }
+}

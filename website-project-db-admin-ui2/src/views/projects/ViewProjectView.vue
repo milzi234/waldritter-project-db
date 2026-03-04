@@ -15,7 +15,7 @@ const projectAPI = useProjectAPI();
 watchEffect(async () => {
   project.value = await projectAPI.get(route.params.id);
   projectAPI.getNextOccurrence(route.params.id).then((occurrence) => {
-    
+
     if (occurrence == null) {
       date.value = []
     } else {
@@ -27,10 +27,7 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <div class="container">
-    <div>
-      <Project :title="project.title" :description="project.description" :id="project.id" :image="project.image" :date="date" />
-    </div>
+  <div>
+    <Project :title="project.title" :description="project.description" :homepage="project.homepage" :id="project.id" :image="project.image" :date="date" />
   </div>
 </template>
-

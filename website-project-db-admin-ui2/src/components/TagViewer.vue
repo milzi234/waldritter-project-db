@@ -1,11 +1,11 @@
 <script setup>
   import {useCategoryStore} from '../stores/categories';
   import {computed} from 'vue'
-  
+
   const props = defineProps({
     selected: Array,
   })
-  
+
   const categoryStore = useCategoryStore();
 
   const selected = computed(() => {
@@ -26,20 +26,9 @@
 </script>
 <template>
   <div>
-    <div v-for="(tags, categoryID) in selected" :key="categoryID" style="margin-top:2rem">
-      <b>{{ categoryStore.find(Number(categoryID)).title }}</b>: <span v-for="tag in tags" :key="tag.id" class="badge bg-primary tag-pill"> {{ tag.title }}</span>     
+    <div v-for="(tags, categoryID) in selected" :key="categoryID" class="mt-4 first:mt-0">
+      <span class="text-xs font-mono uppercase tracking-wider text-gray-500">{{ categoryStore.find(Number(categoryID)).title }}:</span>
+      <span v-for="tag in tags" :key="tag.id" class="badge-cyber ml-1.5">{{ tag.title }}</span>
     </div>
   </div>
 </template>
-
-<style>
-.tag-pill {
-  text-decoration: none;
-  color: white;
-  margin-right: 0.5rem;
-}
-
-.tag-pill:hover {
-  color: lightcyan;
-}
-</style>

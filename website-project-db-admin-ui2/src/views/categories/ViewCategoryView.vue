@@ -10,7 +10,6 @@ const category = ref({});
 
 const categoryAPI = useCategoryAPI();
 
-// Fetch categories asynchronously
 watchEffect(async () => {
   category.value = await categoryAPI.get(route.params.id);
 });
@@ -18,10 +17,7 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <div class="container">
-    <div>
-      <Category :title="category.title" :description="category.description" :id="category.id" />
-    </div>
+  <div>
+    <Category :title="category.title" :description="category.description" :id="category.id" />
   </div>
 </template>
-

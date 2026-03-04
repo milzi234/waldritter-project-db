@@ -10,8 +10,9 @@
 
   const title = ref('')
   const description = ref('')
+  const homepage = ref('')
   const date = ref([])
-  const simple_event = ref(true) 
+  const simple_event = ref(true)
   const new_event = ref(true)
 
   const event_id = ref('')
@@ -26,6 +27,7 @@
     const project = await projectAPI.get(route.params.id);
     title.value = project.title
     description.value = project.description
+    homepage.value = project.homepage || ''
     image.value = project.image
     file = null
   });
@@ -67,10 +69,9 @@
   }
 
   const updateProject = async () => {
-    const response = await projectAPI.update(route.params.id, { title: title.value, description: description.value });
+    const response = await projectAPI.update(route.params.id, { title: title.value, description: description.value, homepage: homepage.value });
     const start_date = date.value.length > 0 ? date.value[0] : null
     const end_date = date.value.length > 1 ? date.value[1] : null
-    // TODO: Error Handling
     if (file) {
       const formData = new FormData();
       formData.append('image', file);
@@ -89,29 +90,36 @@
 </script>
 
 <template>
-<h1>Projekt Bearbeiten</h1>
-<form>
-  <div class="mb-3">
-    <label for="title" class="form-label">Titel</label>
-    <input type="text" class="form-control" id="title" v-model="title">
-  </div>
-  <div class="mb-3" v-if="simple_event">
-    <label for="date" class="form-label">Wann?</label>
-    <VueDatePicker id="date" v-model="date" locale="de" cancelText="abbrechen" selectText="auswählen" :format="format" range></VueDatePicker>
-  </div>
-  <div class="mb-3">
-    <label for="image" class="form-label">Bild</label>
-    <input class="form-control" type="file" id="image" @change="fileChanged" accept="image/*">
-  </div>
-  <div v-if="image" class="mb-3">
-    <img :src="image" id="image" alt="Project image" width="200" height="200" >
-  </div>
-  <div class="mb-3">
-    <label for="description" class="form-label">Beschreibung</label>
-    <textarea class="form-control" id="description" rows="5" v-model="description"></textarea>
-  </div>
-  <button type="submit" class="btn btn-primary" @click.prevent="updateProject">Speichern</button>&nbsp;
-  <button type="button" class="btn btn-danger" @click.prevent="router.push(`/projects/${route.params.id}`)">Abbrechen</button>
-</form>
+<h1 class="text-2xl font-display font-bold text-wald-300 mb-6">Projekt Bearbeiten</h1>
+<div class="section-panel">
+  <form class="space-y-4">
+    <div>
+      <label for="title">Titel</label>
+      <input type="text" id="title" v-model="title">
+    </div>
+    <div v-if="simple_event">
+      <label for="date">Wann?</label>
+      <VueDatePicker id="date" v-model="date" locale="de" cancelText="abbrechen" selectText="auswählen" :format="format" range dark></VueDatePicker>
+    </div>
+    <div>
+      <label for="image">Bild</label>
+      <input type="file" id="image" @change="fileChanged" accept="image/*">
+    </div>
+    <div v-if="image">
+      <img :src="image" alt="Project image" class="w-48 h-48 object-cover rounded border border-wald-500/20">
+    </div>
+    <div>
+      <label for="homepage">Homepage</label>
+      <input type="url" id="homepage" v-model="homepage" placeholder="https://example.com">
+    </div>
+    <div>
+      <label for="description">Beschreibung</label>
+      <textarea id="description" rows="5" v-model="description"></textarea>
+    </div>
+    <div class="flex gap-3">
+      <button type="submit" class="btn-cyber" @click.prevent="updateProject">Speichern</button>
+      <button type="button" class="btn-cyber-danger" @click.prevent="router.push(`/projects/${route.params.id}`)">Abbrechen</button>
+    </div>
+  </form>
+</div>
 </template>
-

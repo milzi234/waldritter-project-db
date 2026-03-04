@@ -1,13 +1,13 @@
 <script setup>
   import {useCategoryStore} from '../stores/categories';
   import {ref, watchEffect} from 'vue'
-  
+
   defineEmits(['update'])
 
   const props = defineProps({
     selected: Array,
   })
-  
+
   const categoryStore = useCategoryStore();
   const selected = ref([])
   watchEffect(() => {
@@ -28,28 +28,16 @@
 </script>
 <template>
   <form>
-    <div v-for="category in categoryStore.categories" :key="category.id" style="margin-top:2rem">
-      <div class="row">
-        <div class="col">
-          <h2 class="category-header">{{ category.title }}</h2>          
-        </div>
-      </div>
-      <div class="row" v-for="(tagChunk, index) in chunk(categoryStore.tagsFor(category.id).value, 2)" :key="`chunk-${index}`">
-        <div class="col" v-for="tag in tagChunk">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" :value="tag.id" :id="`tag-${tag.id}`" v-model="selected" @change="$emit('update', selected)">
-            <label class="form-check-label" :for="`tag-${ tag.id }`">
-              {{ tag.title }}
-            </label>
-          </div>
+    <div v-for="category in categoryStore.categories" :key="category.id" class="mt-6 first:mt-0">
+      <h2 class="text-sm font-mono uppercase tracking-wider text-wald-400 mb-2">{{ category.title }}</h2>
+      <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+        <div v-for="tag in categoryStore.tagsFor(category.id).value" :key="tag.id">
+          <label class="flex items-center gap-2 !mb-0 cursor-pointer">
+            <input type="checkbox" :value="tag.id" :id="`tag-${tag.id}`" v-model="selected" @change="$emit('update', selected)">
+            <span class="text-sm text-gray-300 normal-case tracking-normal">{{ tag.title }}</span>
+          </label>
         </div>
       </div>
     </div>
   </form>
 </template>
-
-<style>
-  .category-header {
-    font-size: 1.2rem;
-  }
-</style>

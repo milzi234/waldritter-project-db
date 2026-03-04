@@ -1,6 +1,6 @@
 <script setup>
   import TagPill from '../components/TagPill.vue'
-  import useCategoryAPI from '../api/Category';  
+  import useCategoryAPI from '../api/Category';
   import { ref, watchEffect } from 'vue'
   import { useRouter } from 'vue-router'
 
@@ -33,22 +33,16 @@
 
 </script>
 <template>
-  <div v-if="id">
-    <h2>
-      {{ title }} <br/>
-    </h2>
-    <span class="text-muted">{{ description }}</span>
-    <div class="functions">
-      <RouterLink :to="{ name: 'edit-category', params: {id: id}}">Bearbeiten</RouterLink>&nbsp;
-      <RouterLink :to="{ name: 'new-tag', params: {categoryID: id}}">Neuer Tag</RouterLink>&nbsp;
-      <a href="#" @click.stop.prevent="deleteCategory" class="link-danger">Löschen</a> 
+  <div v-if="id" class="section-panel">
+    <h2 class="text-lg font-display font-bold text-wald-300 mb-1">{{ title }}</h2>
+    <p class="text-gray-500 text-sm mb-3">{{ description }}</p>
+    <div class="flex items-center gap-4 mb-4">
+      <RouterLink :to="{ name: 'edit-category', params: {id: id}}" class="nav-link !px-0">Bearbeiten</RouterLink>
+      <RouterLink :to="{ name: 'new-tag', params: {categoryID: id}}" class="nav-link !px-0">Neuer Tag</RouterLink>
+      <a href="#" @click.stop.prevent="deleteCategory" class="nav-link !px-0 !text-red-500 hover:!text-red-400">Löschen</a>
     </div>
-    <div style="margin-top:2rem">
-      <ul class="list-inline">
-        <li class="list-inline-item" v-for="tag in tags" :key="tag.id">
-          <TagPill :title="tag.title" :id="tag.id" :categoryID="id"/>
-        </li>
-      </ul>
+    <div class="flex flex-wrap gap-2">
+      <TagPill v-for="tag in tags" :key="tag.id" :title="tag.title" :id="tag.id" :categoryID="id"/>
     </div>
   </div>
 </template>

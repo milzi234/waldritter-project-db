@@ -92,34 +92,28 @@ const formatTimespan = (dates) => {
 </script>
 
 <template>
-  <h1>Termine &amp; Ausnahmen</h1>
-  <div class="container">
+  <h1 class="text-2xl font-display font-bold text-wald-300 mb-6">Termine &amp; Ausnahmen</h1>
+  <div class="space-y-6">
     <div v-for="monthYear in Object.keys(ocurrencesByMonthYear).sort((a, b) => new Date(a.split('-')[1], a.split('-')[0]) - new Date(b.split('-')[1], b.split('-')[0]))"
-      :key="monthYear">
-      <div class="row">
-        <div class="col">
-          <h3>{{ displayMonthYear(monthYear) }}</h3>
+      :key="monthYear"
+      class="section-panel"
+    >
+      <h3 class="text-sm font-mono uppercase tracking-wider text-wald-400 mb-3">{{ displayMonthYear(monthYear) }}</h3>
+      <div v-for="occurrence in ocurrencesByMonthYear[monthYear]" :key="occurrence.id" class="flex items-center justify-between py-2 border-b border-wald-500/10 last:border-0">
+        <div class="font-mono text-sm">
+          <span v-if="occurrence.isException" class="line-through text-gray-600">{{ formatTimespan([occurrence.start_date, occurrence.end_date]) }}</span>
+          <span v-else class="text-gray-300">{{ formatTimespan([occurrence.start_date, occurrence.end_date]) }}</span>
         </div>
-      </div>
-      <div class="row" v-for="occurrence in ocurrencesByMonthYear[monthYear]" :key="occurrence.id">
-        <div class="col-md-6">
-          <p v-if="occurrence.isException"><s>{{ formatTimespan([occurrence.start_date, occurrence.end_date]) }}</s></p>
-          <p v-else>{{ formatTimespan([occurrence.start_date, occurrence.end_date]) }}</p>
-        </div>
-        <div class="col-md-6">
-          <button v-if="occurrence.isException" type="button" class="btn btn-success"
+        <div>
+          <button v-if="occurrence.isException" type="button" class="btn-cyber btn-cyber-sm"
             @click="removeException(occurrence.exception_id)">Wiederherstellen</button>
-          <button v-else type="button" class="btn btn-danger" @click="addException(occurrence.occurrence_id)">Ausnahme
+          <button v-else type="button" class="btn-cyber-danger btn-cyber-sm" @click="addException(occurrence.occurrence_id)">Ausnahme
             hinzufügen</button>
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="col">
-        <div class="functions" style="margin-top: 2rem">
-          <button type="button" class="btn btn-secondary" @click="$router.go(-1)">Zurück</button>
-        </div>
-      </div>
+    <div>
+      <button type="button" class="btn-cyber-secondary" @click="$router.go(-1)">Zurück</button>
     </div>
   </div>
 </template>

@@ -32,12 +32,13 @@
 </script>
 
 <template>
-<h1>Projekt Taggen</h1>
-<h2>{{ title }}</h2>
-<TagChooser :selected="projectTagIDs" @update="updateProjectTagIDs"/>
-<br />
-<button type="submit" class="btn btn-primary" @click.prevent="setTags">Speichern</button>&nbsp;
-<button class="btn btn-secondary" @click.prevent="router.go(-1)">Zurück</button>
-
+<h1 class="text-2xl font-display font-bold text-wald-300 mb-2">Projekt Taggen</h1>
+<h2 class="text-lg text-gray-400 mb-6">{{ title }}</h2>
+<div class="section-panel mb-6">
+  <TagChooser :selected="projectTagIDs" @update="updateProjectTagIDs"/>
+</div>
+<div class="flex gap-3">
+  <button type="submit" class="btn-cyber" @click.prevent="setTags">Speichern</button>
+  <button class="btn-cyber-secondary" @click.prevent="router.go(-1)">Zurück</button>
+</div>
 </template>
-

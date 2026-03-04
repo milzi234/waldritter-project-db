@@ -1,6 +1,6 @@
 <script setup>
   import { marked } from 'marked'
-  import useProjectAPI from '../api/Project';  
+  import useProjectAPI from '../api/Project';
   import { useRouter } from 'vue-router'
   import { computed } from 'vue'
 
@@ -8,6 +8,7 @@
     id: Number,
     title: String,
     description: String,
+    homepage: String,
     image: String,
     date: Array
   })
@@ -33,38 +34,24 @@
   }
 </script>
 <template>
-  <div class="container">
-    <div class="row">
-      <div class="col">
-        <h2>
-          {{ title }} <br/>
-        </h2>
-      </div>
+  <div class="section-panel glow-border">
+    <h2 class="text-xl font-display font-bold text-wald-300 mb-2">{{ title }}</h2>
+
+    <p v-if="formattedDate" class="text-gray-500 text-sm font-mono mb-4">{{ formattedDate }}</p>
+
+    <img v-if="props.image" :src="props.image" alt="Project image" class="w-48 h-48 object-cover rounded mb-4 border border-wald-500/20">
+
+    <div v-if="homepage" class="mb-4">
+      <a :href="homepage" target="_blank" rel="noopener noreferrer" class="btn-cyber-outline btn-cyber-sm inline-block">Homepage besuchen</a>
     </div>
-    <div class="row">
-      <div class="col">
-        <span class="text-muted">{{ formattedDate }}</span>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col">
-        <img v-if="props.image" :src="props.image" alt="Project image" width="200" height="200" > 
-      </div>
-    </div>
-    <div class="row">
-      <div class="col" style="margin-top: 2rem">
-        <span class="text-muted" v-html="marked(description)" v-if="description"></span>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col">
-        <div class="functions" style="margin-top: 2rem">
-          <RouterLink :to="{ name: 'edit-project', params: {id: id}}">Bearbeiten</RouterLink>&nbsp;
-          <RouterLink :to="{ name: 'tag-project', params: {id: id}}">Tags</RouterLink>&nbsp;
-          <RouterLink :to="{ name: 'events', params: {id: id}}">Terminplanung</RouterLink>&nbsp;
-          <a href="#" @click.stop.prevent="deleteProject" class="link-danger">Löschen</a>
-        </div>
-      </div>
+
+    <div v-if="description" class="text-gray-400 text-sm leading-relaxed mb-6 prose-invert" v-html="marked(description)"></div>
+
+    <div class="flex items-center gap-4 pt-4 border-t border-wald-500/10">
+      <RouterLink :to="{ name: 'edit-project', params: {id: id}}" class="nav-link !px-0">Bearbeiten</RouterLink>
+      <RouterLink :to="{ name: 'tag-project', params: {id: id}}" class="nav-link !px-0">Tags</RouterLink>
+      <RouterLink :to="{ name: 'events', params: {id: id}}" class="nav-link !px-0">Terminplanung</RouterLink>
+      <a href="#" @click.stop.prevent="deleteProject" class="nav-link !px-0 !text-red-500 hover:!text-red-400">Löschen</a>
     </div>
   </div>
 </template>

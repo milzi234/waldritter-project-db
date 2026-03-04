@@ -10,8 +10,7 @@
 
   const title = ref('')
   const description = ref('')
-//  const projects = ref([])
-  
+
   const categoryAPI = useCategoryAPI();
 
   watchEffect(async () => {
@@ -19,10 +18,6 @@
     title.value = tag.title
     description.value = tag.description
   });
-
-  // watchEffect(async () => {
-  //   projects.value = await tagAPI.getProjects(id)
-  // });
 
   const deleteTag = async () => {
     if (!confirm('Wirklich löschen? Alle Verbindungen zu Projekten gehen verloren!')) {
@@ -34,20 +29,14 @@
 </script>
 
 <template>
-<h1>{{ title }}</h1>
-<div>
-  <RouterLink :to="{name: 'edit-tag', params: {categoryID: route.params.categoryID, id: id}}">Bearbeiten</RouterLink> &nbsp;
-  <a href="#" @click.stop.prevent="deleteTag" class="link-danger">Löschen</a>
+<div class="section-panel">
+  <h1 class="text-xl font-display font-bold text-wald-300 mb-2">{{ title }}</h1>
+  <div class="flex items-center gap-4 mb-4">
+    <RouterLink :to="{name: 'edit-tag', params: {categoryID: route.params.categoryID, id: id}}" class="nav-link !px-0">Bearbeiten</RouterLink>
+    <a href="#" @click.stop.prevent="deleteTag" class="nav-link !px-0 !text-red-500 hover:!text-red-400">Löschen</a>
+  </div>
+  <p class="text-gray-400 text-sm">{{ description }}</p>
+  <h2 class="text-lg font-display text-wald-400 mt-6 mb-2">Projekte mit diesem Tag</h2>
+  <p class="text-gray-500 text-sm font-mono">TODO</p>
 </div>
-<div>{{ description }}</div>
-<h2>Projekte mit diesem Tag</h2>
-TODO
-<!-- <div style="margin-top:2rem">
-  <ul class="list-unstyled">
-    <li v-for="project in projects" :key="project.id">
-      <ProjectPill :title="project.title" :description="project.description" :id="project.id" />
-    </li>
-  </ul>
-</div> -->
 </template>
-

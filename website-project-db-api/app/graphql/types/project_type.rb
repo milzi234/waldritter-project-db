@@ -14,9 +14,26 @@ module Types
       object.image.attached? ? Rails.application.routes.url_helpers.url_for(object.image) : nil
     end
 
+    field :homepage, String, null: true
+
     field :tags, [Types::TagType], null: false
     def tags
       object.tags
+    end
+
+    field :events, [Types::EventType], null: false
+    def events
+      object.events
+    end
+
+    field :occurrences, [Types::OccurrenceType], null: false
+    def occurrences
+      object.occurrences
+    end
+
+    field :next_occurrence, Types::OccurrenceType, null: true
+    def next_occurrence
+      object.occurrences.where("start_date >= ?", Time.current).order(:start_date).first
     end
   end
 end

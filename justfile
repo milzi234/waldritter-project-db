@@ -430,22 +430,23 @@ k3d-exec service="":
 registry := "localhost:30500"
 image_prefix := registry / "waldritter"
 server := "root@stauchen.events"
+platform := "linux/amd64"
 
 # Build the Rails API image
 build-api:
-    docker build -t {{image_prefix}}/rails-api:latest ./website-project-db-api
+    docker build --platform {{platform}} -t {{image_prefix}}/rails-api:latest ./website-project-db-api
 
 # Build the Admin UI image
 build-admin:
-    docker build -t {{image_prefix}}/admin-ui:latest ./website-project-db-admin-ui2
+    docker build --platform {{platform}} -t {{image_prefix}}/admin-ui:latest ./website-project-db-admin-ui2
 
 # Build the URL Extractor image
 build-extractor:
-    docker build -t {{image_prefix}}/url-extractor:latest ./website-url-extractor
+    docker build --platform {{platform}} -t {{image_prefix}}/url-extractor:latest ./website-url-extractor
 
 # Build the Public UI image
 build-public:
-    docker build -t {{image_prefix}}/public-ui:latest ./website-public-ui
+    docker build --platform {{platform}} -t {{image_prefix}}/public-ui:latest ./website-public-ui
 
 # Build all production images
 build-all-images: build-api build-admin build-extractor build-public
@@ -496,6 +497,10 @@ ship: build-all-images push-all
 ship-one service:
     just build-{{service}}
     just push-{{service}}
+
+# Run garbage collection on the server's container registry to reclaim disk space
+registry-gc:
+    ssh {{server}} "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl exec -n registry deploy/registry -- bin/registry garbage-collect /etc/docker/registry/config.yml --delete-untagged"
 
 # Production Deployment Commands
 # ==============================

@@ -31,7 +31,6 @@ class Settings(BaseSettings):
     )
 
     # Tag Matcher Configuration
-    embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
     tag_match_threshold: float = 0.3
 
     class Config:

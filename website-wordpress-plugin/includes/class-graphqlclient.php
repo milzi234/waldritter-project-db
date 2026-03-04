@@ -181,13 +181,13 @@ class GraphQLClient {
                 }
                 nextOccurrence {
                     id
-                    startDateTime
-                    endDateTime
+                    startDate
+                    endDate
                 }
                 occurrences {
                     id
-                    startDateTime
-                    endDateTime
+                    startDate
+                    endDate
                 }
             }
         }
@@ -232,13 +232,13 @@ class GraphQLClient {
                 }
                 nextOccurrence {
                     id
-                    startDateTime
-                    endDateTime
+                    startDate
+                    endDate
                 }
                 occurrences {
                     id
-                    startDateTime
-                    endDateTime
+                    startDate
+                    endDate
                 }
             }
         }
@@ -317,8 +317,8 @@ class GraphQLClient {
                 }
                 occurrences {
                     id
-                    startDateTime
-                    endDateTime
+                    startDate
+                    endDate
                 }
             }
         }
@@ -363,13 +363,13 @@ class GraphQLClient {
                 }
                 nextOccurrence {
                     id
-                    startDateTime
-                    endDateTime
+                    startDate
+                    endDate
                 }
                 occurrences {
                     id
-                    startDateTime
-                    endDateTime
+                    startDate
+                    endDate
                 }
             }
         }
@@ -409,8 +409,8 @@ class GraphQLClient {
 
         // Sort projects by next occurrence date (projects with upcoming dates first)
         usort($projects, function ($a, $b) {
-            $a_next = $a['nextOccurrence']['startDateTime'] ?? null;
-            $b_next = $b['nextOccurrence']['startDateTime'] ?? null;
+            $a_next = $a['nextOccurrence']['startDate'] ?? null;
+            $b_next = $b['nextOccurrence']['startDate'] ?? null;
 
             // Projects with upcoming occurrences come first
             if ($a_next && !$b_next) {

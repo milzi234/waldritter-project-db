@@ -109,23 +109,23 @@
   const dateHelper = {
     /**
      * Format a date range for display
-     * @param {string} startDateTime - ISO8601 start datetime
-     * @param {string|null} endDateTime - ISO8601 end datetime
+     * @param {string} startDate - ISO8601 start datetime
+     * @param {string|null} endDate - ISO8601 end datetime
      * @returns {string} Formatted date range
      */
-    formatRange(startDateTime, endDateTime = null) {
-      if (!startDateTime) return '';
+    formatRange(startDate, endDate = null) {
+      if (!startDate) return '';
 
       try {
-        const start = new Date(startDateTime);
+        const start = new Date(startDate);
         const startDate = this.formatDate(start);
         const startTime = this.formatTime(start);
 
-        if (!endDateTime) {
+        if (!endDate) {
           return startTime !== '00:00' ? `${startDate} ${startTime}` : startDate;
         }
 
-        const end = new Date(endDateTime);
+        const end = new Date(endDate);
         const endDate = this.formatDate(end);
         const endTime = this.formatTime(end);
 
@@ -218,9 +218,9 @@
       const now = new Date();
       return occurrences
         .filter(occ => {
-          if (!occ.startDateTime) return false;
+          if (!occ.startDate) return false;
           try {
-            return new Date(occ.startDateTime) >= now;
+            return new Date(occ.startDate) >= now;
           } catch (e) {
             return false;
           }
@@ -588,7 +588,7 @@
       // Get upcoming occurrences (up to 3)
       const upcomingOccurrences = dateHelper.getUpcoming(project.occurrences, 3);
       const totalUpcoming = project.occurrences
-        ? project.occurrences.filter(o => dateHelper.isFuture(o.startDateTime)).length
+        ? project.occurrences.filter(o => dateHelper.isFuture(o.startDate)).length
         : 0;
 
       // Group tags by category
@@ -631,8 +631,8 @@
       let datesHtml = '';
       if (upcomingOccurrences.length > 0) {
         const datesListHtml = upcomingOccurrences.map((occ, index) => {
-          const dateStr = dateHelper.formatRange(occ.startDateTime, occ.endDateTime);
-          const relative = index === 0 ? dateHelper.getRelative(occ.startDateTime) : null;
+          const dateStr = dateHelper.formatRange(occ.startDate, occ.endDate);
+          const relative = index === 0 ? dateHelper.getRelative(occ.startDate) : null;
           return `
             <div class="waldritter-project-card__date${index === 0 ? ' waldritter-project-card__date--next' : ''}">
               <span class="waldritter-project-card__date-value">${this.escapeHtml(dateStr)}</span>

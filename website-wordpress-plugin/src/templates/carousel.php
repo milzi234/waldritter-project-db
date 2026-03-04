@@ -113,10 +113,10 @@ $interval = (int) $attributes['interval'];
                             <?php if (!empty($item['next_occurrence'])): ?>
                                 <?php
                                 $next_date = DateHelper::formatRange(
-                                    $item['next_occurrence']['startDateTime'],
-                                    $item['next_occurrence']['endDateTime'] ?? null
+                                    $item['next_occurrence']['startDate'],
+                                    $item['next_occurrence']['endDate'] ?? null
                                 );
-                                $relative = DateHelper::getRelative($item['next_occurrence']['startDateTime']);
+                                $relative = DateHelper::getRelative($item['next_occurrence']['startDate']);
                                 ?>
                                 <div class="waldritter-carousel__date">
                                     <div class="waldritter-carousel__date-row">

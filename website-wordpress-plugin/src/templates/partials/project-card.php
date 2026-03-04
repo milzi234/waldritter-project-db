@@ -32,9 +32,9 @@ foreach ($project['tags'] ?? [] as $tag) {
 $upcoming_occurrences = [];
 $now = new DateTime();
 foreach ($project['occurrences'] ?? [] as $occurrence) {
-    if (!empty($occurrence['startDateTime'])) {
+    if (!empty($occurrence['startDate'])) {
         try {
-            $start = new DateTime($occurrence['startDateTime']);
+            $start = new DateTime($occurrence['startDate']);
             if ($start >= $now) {
                 $upcoming_occurrences[] = $occurrence;
             }
@@ -88,10 +88,10 @@ $has_upcoming_dates = !empty($display_occurrences);
                         <?php foreach ($display_occurrences as $index => $occurrence): ?>
                             <?php
                             $date_str = DateHelper::formatRange(
-                                $occurrence['startDateTime'],
-                                $occurrence['endDateTime'] ?? null
+                                $occurrence['startDate'],
+                                $occurrence['endDate'] ?? null
                             );
-                            $relative = DateHelper::getRelative($occurrence['startDateTime']);
+                            $relative = DateHelper::getRelative($occurrence['startDate']);
                             ?>
                             <div class="waldritter-project-card__date<?php echo $index === 0 ? ' waldritter-project-card__date--next' : ''; ?>">
                                 <span class="waldritter-project-card__date-value"><?php echo esc_html($date_str); ?></span>

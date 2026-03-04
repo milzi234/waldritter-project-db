@@ -424,6 +424,155 @@ k3d-exec service="":
     POD=$(kubectl get pods -n waldritter -l app.kubernetes.io/component={{service}} -o jsonpath='{.items[0].metadata.name}')
     kubectl exec -it -n waldritter $POD -- /bin/sh
 
+# Production Image Commands (stauchen.events)
+# ============================================
+
+registry := "localhost:30500"
+image_prefix := registry / "waldritter"
+server := "root@stauchen.events"
+
+# Build the Rails API image
+build-api:
+    docker build -t {{image_prefix}}/rails-api:latest ./website-project-db-api
+
+# Build the Admin UI image
+build-admin:
+    docker build -t {{image_prefix}}/admin-ui:latest ./website-project-db-admin-ui2
+
+# Build the URL Extractor image
+build-extractor:
+    docker build -t {{image_prefix}}/url-extractor:latest ./website-url-extractor
+
+# Build the Public UI image
+build-public:
+    docker build -t {{image_prefix}}/public-ui:latest ./website-public-ui
+
+# Build all production images
+build-all-images: build-api build-admin build-extractor build-public
+
+# Push a single image to the server via scp (docker save | scp | ctr import + push)
+[private]
+push-image name:
+    #!/bin/bash
+    set -e
+    IMAGE="{{image_prefix}}/{{name}}:latest"
+    TARBALL="{{name}}.tar.gz"
+    echo "Saving $IMAGE..."
+    docker save "$IMAGE" | gzip > "$TARBALL"
+    echo "Copying $TARBALL to server..."
+    scp "$TARBALL" {{server}}:~/"$TARBALL"
+    echo "Importing and pushing on server..."
+    ssh {{server}} "\
+        ctr -n k8s.io images import ~/$TARBALL && \
+        ctr -n k8s.io images push --plain-http {{registry}}/waldritter/{{name}}:latest && \
+        rm ~/$TARBALL"
+    rm "$TARBALL"
+    echo "$IMAGE pushed successfully!"
+
+# Push the Rails API image to the server
+push-api:
+    just push-image rails-api
+
+# Push the Admin UI image to the server
+push-admin:
+    just push-image admin-ui
+
+# Push the URL Extractor image to the server
+push-extractor:
+    just push-image url-extractor
+
+# Push the Public UI image to the server
+push-public:
+    just push-image public-ui
+
+# Push all images to the server
+push-all: push-api push-admin push-extractor push-public
+
+# Build and push all images to the server
+ship: build-all-images push-all
+    @echo "All images built and pushed to {{server}}"
+
+# Build and push a single service (e.g., just ship-one api)
+ship-one service:
+    just build-{{service}}
+    just push-{{service}}
+
+# Production Deployment Commands
+# ==============================
+
+ssh_cmd := "ssh " + server
+kubectl_cmd := ssh_cmd + " 'KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl"
+
+# Deploy secrets to the production cluster from secrets/production/secrets.yaml
+deploy-secrets:
+    #!/bin/bash
+    set -e
+    SECRETS_FILE="secrets/production/secrets.yaml"
+
+    if [ ! -f "$SECRETS_FILE" ]; then
+        echo "Error: $SECRETS_FILE not found."
+        echo "Copy secrets/production/secrets.yaml.example to secrets/production/secrets.yaml and fill in values."
+        exit 1
+    fi
+
+    # Parse values from YAML
+    SECRET_KEY_BASE=$(grep 'SECRET_KEY_BASE' "$SECRETS_FILE" | sed 's/.*: *"\(.*\)"/\1/')
+    GOOGLE_CLIENT_ID=$(grep 'GOOGLE_CLIENT_ID' "$SECRETS_FILE" | sed 's/.*: *"\(.*\)"/\1/')
+    ANTHROPIC_API_KEY=$(grep 'ANTHROPIC_API_KEY' "$SECRETS_FILE" | sed 's/.*: *"\(.*\)"/\1/')
+    GOOGLE_API_KEY=$(grep 'GOOGLE_API_KEY' "$SECRETS_FILE" | sed 's/.*: *"\(.*\)"/\1/')
+
+    echo "Creating secrets in waldritter namespace..."
+
+    # Create namespace if it doesn't exist
+    {{ssh_cmd}} "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl create namespace waldritter --dry-run=client -o yaml | KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f -"
+
+    # rails-secrets
+    {{ssh_cmd}} "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl create secret generic rails-secrets \
+        --from-literal=SECRET_KEY_BASE='$SECRET_KEY_BASE' \
+        --from-literal=GOOGLE_CLIENT_ID='$GOOGLE_CLIENT_ID' \
+        --namespace waldritter \
+        --dry-run=client -o yaml | KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f -"
+    echo "Created rails-secrets"
+
+    # google-oauth (same GOOGLE_CLIENT_ID, prefixed for Vite)
+    {{ssh_cmd}} "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl create secret generic google-oauth \
+        --from-literal=VITE_GOOGLE_CLIENT_ID='$GOOGLE_CLIENT_ID' \
+        --namespace waldritter \
+        --dry-run=client -o yaml | KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f -"
+    echo "Created google-oauth"
+
+    # extractor-secrets
+    {{ssh_cmd}} "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl create secret generic extractor-secrets \
+        --from-literal=ANTHROPIC_API_KEY='$ANTHROPIC_API_KEY' \
+        --from-literal=GOOGLE_API_KEY='$GOOGLE_API_KEY' \
+        --namespace waldritter \
+        --dry-run=client -o yaml | KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f -"
+    echo "Created extractor-secrets"
+
+    echo "All secrets deployed!"
+
+# Apply ArgoCD Application manifest to the cluster (one-time setup)
+deploy-argocd-app:
+    #!/bin/bash
+    set -e
+    echo "Applying ArgoCD Application manifest..."
+    cat deploy/argocd-app.yaml | {{ssh_cmd}} "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f -"
+    echo "ArgoCD Application created! It will now sync automatically."
+
+# Check production pod status
+prod-status:
+    {{ssh_cmd}} 'KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl get pods -n waldritter'
+
+# View production logs for a service
+prod-logs service="":
+    #!/bin/bash
+    if [ -z "{{service}}" ]; then
+        echo "Usage: just prod-logs <service>"
+        echo "Available: rails-api, admin-ui, public-ui, url-extractor"
+        exit 1
+    fi
+    {{ssh_cmd}} "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl logs -n waldritter -l app={{service}} --tail=100 -f"
+
 # Help Command
 # ============
 

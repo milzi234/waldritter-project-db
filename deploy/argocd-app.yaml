@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: waldritter
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/milzi234/website-unified.git
+    targetRevision: main
+    path: deploy/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: waldritter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

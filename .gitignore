@@ -57,6 +57,9 @@ exports/
 # Obsidian vault (content managed separately)
 website-content-api/obsidian-vault/
 
+# Private keys
+*-key.pem
+
 # Kubernetes secrets - NEVER commit these!
 secrets/**/secrets.yaml
 k3d-certs/

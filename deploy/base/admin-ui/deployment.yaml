@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-ui
+  labels:
+    app: admin-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-ui
+  template:
+    metadata:
+      labels:
+        app: admin-ui
+    spec:
+      containers:
+        - name: admin-ui
+          image: localhost:30500/waldritter/admin-ui:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: VITE_API_BASE_URL
+              value: "https://project-api.waldritter.dev"
+          envFrom:
+            - secretRef:
+                name: google-oauth
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"

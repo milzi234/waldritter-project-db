@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rails-api
+  labels:
+    app: rails-api
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rails-api
+  template:
+    metadata:
+      labels:
+        app: rails-api
+    spec:
+      containers:
+        - name: rails-api
+          image: localhost:30500/waldritter/rails-api:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: RAILS_ENV
+              value: "production"
+            - name: RAILS_SERVE_STATIC_FILES
+              value: "true"
+            - name: RAILS_LOG_TO_STDOUT
+              value: "true"
+            - name: EXTRACTOR_SERVICE_URL
+              value: "http://url-extractor:8000"
+            - name: RAILS_HOSTS
+              value: "project-api.waldritter.dev,localhost"
+          envFrom:
+            - secretRef:
+                name: rails-secrets
+          volumeMounts:
+            - name: rails-db
+              mountPath: /app/db
+            - name: rails-storage
+              mountPath: /app/storage
+          readinessProbe:
+            httpGet:
+              path: /up
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /up
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: rails-db
+          persistentVolumeClaim:
+            claimName: rails-db
+        - name: rails-storage
+          persistentVolumeClaim:
+            claimName: rails-storage

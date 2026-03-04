@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+    bootstrap="tests/php/bootstrap.php"
+    colors="true"
+    cacheDirectory=".phpunit.cache"
+>
+    <testsuites>
+        <testsuite name="Waldritter Project DB">
+            <directory suffix="Test.php">./tests/php</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">./includes</directory>
+        </include>
+        <exclude>
+            <directory>./vendor</directory>
+            <directory>./node_modules</directory>
+        </exclude>
+    </source>
+
+    <php>
+        <const name="WALDRITTER_PROJECT_DB_TESTING" value="true"/>
+    </php>
+</phpunit>

@@ -1,0 +1,234 @@
+/**
+ * Waldritter Project DB - Block Editor Styles
+ */
+
+/* Block Icons */
+.waldritter-block-icon {
+  fill: currentColor;
+}
+
+/* Block Previews in Editor */
+.wp-block-waldritter-carousel,
+.wp-block-waldritter-search {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px dashed #ccc;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+/* Placeholder states */
+.waldritter-block-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  background: #f0f0f0;
+  border-radius: 4px;
+  min-height: 200px;
+}
+
+.waldritter-block-placeholder__icon {
+  margin-bottom: 1rem;
+  color: #757575;
+}
+
+.waldritter-block-placeholder__title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e1e1e;
+}
+
+.waldritter-block-placeholder__description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #757575;
+}
+
+/* Inspector Controls */
+.waldritter-inspector-section {
+  margin-bottom: 1.5rem;
+}
+
+.waldritter-inspector-section__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #757575;
+  margin-bottom: 0.5rem;
+}
+
+/* Tag selector in inspector */
+.waldritter-tag-selector {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.waldritter-tag-selector__category {
+  margin-bottom: 0.75rem;
+}
+
+.waldritter-tag-selector__category-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1e1e1e;
+  margin-bottom: 0.25rem;
+}
+
+.waldritter-tag-selector__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.waldritter-tag-selector__tag {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  background: #e0e0e0;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.waldritter-tag-selector__tag:hover {
+  background: #d0d0d0;
+}
+
+.waldritter-tag-selector__tag--selected {
+  background: #059669;
+  color: #fff;
+}
+
+.waldritter-tag-selector__tag--selected:hover {
+  background: #065f46;
+}
+
+/* Preview loading state */
+.waldritter-block-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.waldritter-block-loading__spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #ddd;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: waldritter-editor-spin 0.8s linear infinite;
+}
+
+@keyframes waldritter-editor-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error state */
+.waldritter-block-error {
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  color: #991b1b;
+  font-size: 0.875rem;
+}
+
+/* Carousel block preview */
+.waldritter-carousel-preview {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  overflow: hidden;
+}
+
+.waldritter-carousel-preview__card {
+  flex: 0 0 calc(33.333% - 0.75rem);
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.waldritter-carousel-preview__image {
+  aspect-ratio: 16 / 9;
+  background: #e5e7eb;
+}
+
+.waldritter-carousel-preview__content {
+  padding: 0.75rem;
+}
+
+.waldritter-carousel-preview__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+/* Search block preview */
+.waldritter-search-preview {
+  padding: 1rem;
+}
+
+.waldritter-search-preview__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.waldritter-search-preview__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.waldritter-search-preview__card {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.waldritter-search-preview__card-image {
+  width: 120px;
+  aspect-ratio: 16 / 9;
+  background: #e5e7eb;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.waldritter-search-preview__card-content {
+  flex: 1;
+}
+
+.waldritter-search-preview__card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.25rem;
+}
+
+.waldritter-search-preview__card-description {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+}

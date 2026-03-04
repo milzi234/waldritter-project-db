@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+.phpunit.cache/
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+wordpress_data/
+db_data/
+
+# Compiled language files
+languages/*.mo
+
+# NPM debug
+npm-debug.log*
+
+# Environment
+.env
+.env.local

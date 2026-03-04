@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:6.4-php8.2-apache
+    container_name: waldritter-wordpress
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DEBUG: 1
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./:/var/www/html/wp-content/plugins/waldritter-project-db
+    depends_on:
+      - db
+    networks:
+      - waldritter-network
+
+  db:
+    image: mariadb:10.11
+    container_name: waldritter-mariadb
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - waldritter-network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: waldritter-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - waldritter-network
+
+  # WordPress CLI for setup and testing
+  wpcli:
+    image: wordpress:cli
+    container_name: waldritter-wpcli
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./:/var/www/html/wp-content/plugins/waldritter-project-db
+    depends_on:
+      - wordpress
+      - db
+    networks:
+      - waldritter-network
+    entrypoint: ["wp", "--allow-root"]
+    command: ["--info"]
+
+volumes:
+  wordpress_data:
+  db_data:
+
+networks:
+  waldritter-network:
+    driver: bridge

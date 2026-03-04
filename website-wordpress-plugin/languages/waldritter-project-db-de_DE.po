@@ -1,0 +1,337 @@
+# German translation for Waldritter Project DB plugin
+# Copyright (C) 2024 Waldritter e.V.
+# This file is distributed under the GPL v2 or later.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Waldritter Project DB 1.0.0\n"
+"Report-Msgid-Bugs-To: info@waldritter.de\n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: Waldritter e.V. <info@waldritter.de>\n"
+"Language-Team: German\n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: includes/class-plugin.php
+msgid "Waldritter Project DB"
+msgstr "Waldritter Projektdatenbank"
+
+#: includes/class-plugin.php
+msgid "Waldritter DB"
+msgstr "Waldritter DB"
+
+#: includes/class-plugin.php
+msgid "Configure the connection to the Waldritter Project Database API."
+msgstr "Konfigurieren Sie die Verbindung zur Waldritter Projektdatenbank API."
+
+#: includes/class-plugin.php
+msgid "API Settings"
+msgstr "API-Einstellungen"
+
+#: includes/class-plugin.php
+msgid "API URL"
+msgstr "API-URL"
+
+#: includes/class-plugin.php
+msgid "The GraphQL endpoint URL."
+msgstr "Die GraphQL-Endpunkt-URL."
+
+#: includes/class-plugin.php
+msgid "Cache Duration (seconds)"
+msgstr "Cache-Dauer (Sekunden)"
+
+#: includes/class-plugin.php
+msgid "How long to cache API responses. Set to 0 to disable caching."
+msgstr "Wie lange API-Antworten gecacht werden sollen. Auf 0 setzen um Caching zu deaktivieren."
+
+#: includes/class-plugin.php
+msgid "Cache Management"
+msgstr "Cache-Verwaltung"
+
+#: includes/class-plugin.php
+msgid "Clear Cache"
+msgstr "Cache leeren"
+
+#: includes/class-plugin.php
+msgid "Cache cleared successfully."
+msgstr "Cache erfolgreich geleert."
+
+#: includes/class-plugin.php
+msgid "Available Shortcodes"
+msgstr "Verfügbare Shortcodes"
+
+#: includes/class-plugin.php
+msgid "Shortcode"
+msgstr "Shortcode"
+
+#: includes/class-plugin.php
+msgid "Description"
+msgstr "Beschreibung"
+
+#: includes/class-plugin.php
+msgid "Displays a carousel of featured projects with optional tag filtering."
+msgstr "Zeigt ein Karussell von ausgewählten Projekten mit optionaler Tag-Filterung an."
+
+#: includes/class-plugin.php
+msgid "Displays an interactive project search with tag filtering and pagination."
+msgstr "Zeigt eine interaktive Projektsuche mit Tag-Filterung und Paginierung an."
+
+#: src/templates/carousel.php
+#: src/templates/partials/project-card.php
+msgid "Homepage besuchen"
+msgstr "Homepage besuchen"
+
+#: src/templates/carousel.php
+msgid "Project Carousel"
+msgstr "Projekt-Karussell"
+
+#: src/templates/carousel.php
+msgid "Previous slide"
+msgstr "Vorherige Folie"
+
+#: src/templates/carousel.php
+msgid "Next slide"
+msgstr "Nächste Folie"
+
+#: src/templates/carousel.php
+#, php-format
+msgid "%1$d of %2$d"
+msgstr "%1$d von %2$d"
+
+#: src/templates/carousel.php
+#, php-format
+msgid "Go to slide %d"
+msgstr "Zu Folie %d wechseln"
+
+#: src/templates/carousel.php
+msgid "Keine Projekte gefunden"
+msgstr "Keine Projekte gefunden"
+
+#: src/templates/carousel.php
+msgid "Es wurden keine Projekte mit den angegebenen Filtern gefunden."
+msgstr "Es wurden keine Projekte mit den angegebenen Filtern gefunden."
+
+#: src/templates/search.php
+msgid "Filter"
+msgstr "Filter"
+
+#: src/templates/search.php
+msgid "Filter by Tags"
+msgstr "Nach Tags filtern"
+
+#: src/templates/search.php
+msgid "Close filter"
+msgstr "Filter schließen"
+
+#: src/templates/search.php
+msgid "Clear All"
+msgstr "Alle löschen"
+
+#: src/templates/search.php
+msgid "Apply Filters"
+msgstr "Filter anwenden"
+
+#: src/templates/search.php
+#, php-format
+msgid "%d Project"
+msgid_plural "%d Projects"
+msgstr[0] "%d Projekt"
+msgstr[1] "%d Projekte"
+
+#: src/templates/search.php
+msgid "No projects found matching your criteria."
+msgstr "Keine Projekte mit den angegebenen Kriterien gefunden."
+
+#: src/templates/search.php
+msgid "Loading projects..."
+msgstr "Projekte werden geladen..."
+
+#: src/templates/search.php
+msgid "Project pagination"
+msgstr "Projekt-Paginierung"
+
+#: src/templates/search.php
+msgid "Previous page"
+msgstr "Vorherige Seite"
+
+#: src/templates/search.php
+msgid "Next page"
+msgstr "Nächste Seite"
+
+#: src/templates/search.php
+msgid "Previous"
+msgstr "Zurück"
+
+#: src/templates/search.php
+msgid "Next"
+msgstr "Weiter"
+
+#: src/templates/partials/project-card.php
+msgid "Other"
+msgstr "Sonstige"
+
+#: src/templates/partials/project-card.php
+#, php-format
+msgid "%d Date"
+msgid_plural "%d Dates"
+msgstr[0] "%d Termin"
+msgstr[1] "%d Termine"
+
+#: src/templates/partials/project-card.php
+#, php-format
+msgid "+ %d more dates"
+msgstr "+ %d weitere Termine"
+
+#: includes/class-graphqlexception.php
+msgid "Unable to connect to the project database. Please try again later."
+msgstr "Verbindung zur Projektdatenbank nicht möglich. Bitte versuchen Sie es später erneut."
+
+#: includes/class-graphqlexception.php
+msgid "There was an error loading the project data."
+msgstr "Beim Laden der Projektdaten ist ein Fehler aufgetreten."
+
+#: includes/class-graphqlexception.php
+msgid "An unexpected error occurred."
+msgstr "Ein unerwarteter Fehler ist aufgetreten."
+
+#: includes/class-graphqlexception.php
+#, php-format
+msgid "API request failed: %s"
+msgstr "API-Anfrage fehlgeschlagen: %s"
+
+#: includes/class-graphqlexception.php
+#, php-format
+msgid "API returned HTTP status %d"
+msgstr "API hat HTTP-Status %d zurückgegeben"
+
+#: includes/class-graphqlexception.php
+msgid "Invalid JSON response from API"
+msgstr "Ungültige JSON-Antwort von der API"
+
+#: assets/js/blocks.js
+msgid "Waldritter Carousel"
+msgstr "Waldritter Karussell"
+
+#: assets/js/blocks.js
+msgid "Carousel displaying featured projects with tag filtering."
+msgstr "Karussell mit ausgewählten Projekten und Tag-Filterung."
+
+#: assets/js/blocks.js
+msgid "carousel"
+msgstr "karussell"
+
+#: assets/js/blocks.js
+msgid "slider"
+msgstr "slider"
+
+#: assets/js/blocks.js
+msgid "projects"
+msgstr "projekte"
+
+#: assets/js/blocks.js
+msgid "Filter by Tags"
+msgstr "Nach Tags filtern"
+
+#: assets/js/blocks.js
+msgid "Select tags to filter projects (AND logic)"
+msgstr "Tags auswählen um Projekte zu filtern (UND-Logik)"
+
+#: assets/js/blocks.js
+msgid "Specific Projects"
+msgstr "Bestimmte Projekte"
+
+#: assets/js/blocks.js
+msgid "Project IDs"
+msgstr "Projekt-IDs"
+
+#: assets/js/blocks.js
+msgid "Comma-separated list of project IDs"
+msgstr "Kommagetrennte Liste von Projekt-IDs"
+
+#: assets/js/blocks.js
+msgid "Hidden Categories"
+msgstr "Versteckte Kategorien"
+
+#: assets/js/blocks.js
+msgid "Category Names"
+msgstr "Kategorie-Namen"
+
+#: assets/js/blocks.js
+msgid "Comma-separated list of category names to hide"
+msgstr "Kommagetrennte Liste von Kategorie-Namen zum Verstecken"
+
+#: assets/js/blocks.js
+msgid "Animation"
+msgstr "Animation"
+
+#: assets/js/blocks.js
+msgid "Auto Scroll"
+msgstr "Automatisches Scrollen"
+
+#: assets/js/blocks.js
+msgid "Interval (ms)"
+msgstr "Intervall (ms)"
+
+#: assets/js/blocks.js
+msgid "Project"
+msgstr "Projekt"
+
+#: assets/js/blocks.js
+msgid "Waldritter Search"
+msgstr "Waldritter Suche"
+
+#: assets/js/blocks.js
+msgid "Interactive project browser with tag filtering and pagination."
+msgstr "Interaktiver Projekt-Browser mit Tag-Filterung und Paginierung."
+
+#: assets/js/blocks.js
+msgid "search"
+msgstr "suche"
+
+#: assets/js/blocks.js
+msgid "filter"
+msgstr "filter"
+
+#: assets/js/blocks.js
+msgid "Display Settings"
+msgstr "Anzeigeeinstellungen"
+
+#: assets/js/blocks.js
+msgid "Projects per Page"
+msgstr "Projekte pro Seite"
+
+#: assets/js/blocks.js
+msgid "Show Occurrences"
+msgstr "Termine anzeigen"
+
+#: assets/js/blocks.js
+msgid "Display expandable event dates"
+msgstr "Ausklappbare Termine anzeigen"
+
+#: assets/js/blocks.js
+msgid "Initial Tags"
+msgstr "Anfangs-Tags"
+
+#: assets/js/blocks.js
+msgid "Pre-select these tags on page load"
+msgstr "Diese Tags beim Seitenaufruf vorauswählen"
+
+#: assets/js/blocks.js
+msgid "Comma-separated list of category names to hide from filter"
+msgstr "Kommagetrennte Liste von Kategorie-Namen, die im Filter versteckt werden"
+
+#: assets/js/blocks.js
+msgid "Project description..."
+msgstr "Projektbeschreibung..."
+
+#: includes/class-restapi.php
+msgid "Project not found"
+msgstr "Projekt nicht gefunden"
+
+#: includes/class-restapi.php
+msgid "Cache cleared successfully"
+msgstr "Cache erfolgreich geleert"

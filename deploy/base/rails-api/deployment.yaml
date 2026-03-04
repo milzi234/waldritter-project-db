@@ -32,12 +32,14 @@ spec:
               value: "http://url-extractor:8000"
             - name: RAILS_HOSTS
               value: "project-api.waldritter.dev,localhost"
+            - name: DATABASE_PATH
+              value: "/data/db/production.sqlite3"
           envFrom:
             - secretRef:
                 name: rails-secrets
           volumeMounts:
             - name: rails-db
-              mountPath: /app/db
+              mountPath: /data/db
             - name: rails-storage
               mountPath: /app/storage
           readinessProbe:

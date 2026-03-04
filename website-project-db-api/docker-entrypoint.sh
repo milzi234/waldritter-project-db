@@ -5,7 +5,8 @@ set -e
 rm -f /app/tmp/pids/server.pid
 
 # Create database if it doesn't exist
-if [ ! -f /app/db/production.sqlite3 ]; then
+DB_PATH="${DATABASE_PATH:-/app/db/production.sqlite3}"
+if [ ! -f "$DB_PATH" ]; then
     echo "Creating database..."
     bundle exec rails db:create
 fi

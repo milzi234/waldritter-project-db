@@ -9,7 +9,7 @@ const tagsParam = url.searchParams.get('tags');
 const tagNames = tagsParam ? tagsParam.split(',').map(t => decodeURIComponent(t)) : [];
 
 const [projects, categories] = await Promise.all([
-  fetchProjects({ tags: tagNames.length > 0 ? tagNames : undefined }),
+  fetchProjects({ tags: tagNames.length > 0 ? tagNames : undefined, limit: 12 }),
   fetchCategories(),
 ]);
 ---

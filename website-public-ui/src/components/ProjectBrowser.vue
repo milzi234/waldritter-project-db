@@ -51,7 +51,7 @@
     <!-- Result count -->
     <div class="flex items-center gap-2 mb-6 text-xs font-mono text-gray-500">
       <span class="w-1 h-1 rounded-full bg-wald-400"></span>
-      <span>{{ projects.length }} Projekte gefunden</span>
+      <span>{{ totalCount }} Projekte gefunden</span>
     </div>
 
     <!-- Loading indicator -->
@@ -110,16 +110,61 @@
       </a>
     </div>
 
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="mt-8 flex items-center justify-center gap-2">
+      <button
+        @click="goToPage(currentPage - 1)"
+        :disabled="currentPage <= 1"
+        :class="[
+          'px-3 py-1.5 text-xs font-mono tracking-wider border rounded transition-all duration-300 cursor-pointer',
+          currentPage <= 1
+            ? 'border-wald-500/10 text-gray-600 cursor-not-allowed'
+            : 'border-wald-500/30 text-gray-400 hover:border-wald-400/50 hover:text-wald-300'
+        ]"
+      >
+        &laquo; ZURÜCK
+      </button>
+
+      <button
+        v-for="page in visiblePages"
+        :key="page"
+        @click="goToPage(page)"
+        :class="[
+          'w-8 h-8 text-xs font-mono border rounded transition-all duration-300 cursor-pointer',
+          page === currentPage
+            ? 'border-wald-400 bg-wald-500/20 text-wald-300 shadow-[0_0_10px_rgba(0,255,136,0.2)]'
+            : 'border-wald-500/30 text-gray-400 hover:border-wald-400/50 hover:text-wald-300'
+        ]"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        @click="goToPage(currentPage + 1)"
+        :disabled="currentPage >= totalPages"
+        :class="[
+          'px-3 py-1.5 text-xs font-mono tracking-wider border rounded transition-all duration-300 cursor-pointer',
+          currentPage >= totalPages
+            ? 'border-wald-500/10 text-gray-600 cursor-not-allowed'
+            : 'border-wald-500/30 text-gray-400 hover:border-wald-400/50 hover:text-wald-300'
+        ]"
+      >
+        WEITER &raquo;
+      </button>
+    </div>
+
     <!-- Empty state -->
-    <div v-else class="text-center py-20">
+    <div v-else-if="!loading && projects.length === 0" class="text-center py-20">
       <p class="font-mono text-gray-500 text-sm">Keine Projekte gefunden.</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { marked } from 'marked';
+
+const PAGE_SIZE = 12;
 
 interface Tag {
   id: string;
@@ -161,6 +206,20 @@ const categories = ref<Category[]>([]);
 const projects = ref<Project[]>([]);
 const selectedTags = ref<Set<string>>(new Set());
 const loading = ref(false);
+const currentPage = ref(1);
+const totalCount = ref(0);
+
+const totalPages = computed(() => Math.ceil(totalCount.value / PAGE_SIZE));
+
+const visiblePages = computed(() => {
+  const total = totalPages.value;
+  const current = currentPage.value;
+  const pages: number[] = [];
+  const start = Math.max(1, current - 2);
+  const end = Math.min(total, current + 2);
+  for (let i = start; i <= end; i++) pages.push(i);
+  return pages;
+});
 
 const PROJECT_FIELDS = `
   id
@@ -171,15 +230,38 @@ const PROJECT_FIELDS = `
   nextOccurrence { id startDate endDate }
 `;
 
-onMounted(() => {
+onMounted(async () => {
   // Hydrate from SSR data
-  projects.value = JSON.parse(props.initialProjects);
   categories.value = JSON.parse(props.initialCategories);
 
-  // Parse initial tags from URL
-  const tagsParam = new URLSearchParams(window.location.search).get('tags');
+  // Parse initial tags and page from URL
+  const params = new URLSearchParams(window.location.search);
+  const tagsParam = params.get('tags');
   if (tagsParam) {
     tagsParam.split(',').forEach(t => selectedTags.value.add(decodeURIComponent(t)));
+  }
+  const pageParam = params.get('page');
+  if (pageParam) {
+    currentPage.value = Math.max(1, parseInt(pageParam, 10) || 1);
+  }
+
+  // If on page 1 with no filters, use SSR data and fetch count separately
+  if (currentPage.value === 1 && selectedTags.value.size === 0) {
+    projects.value = JSON.parse(props.initialProjects);
+    // Fetch total count in background
+    try {
+      const res = await fetch(`${apiUrl}/graphql`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `{ projectsCount }` }),
+      });
+      const json = await res.json();
+      totalCount.value = json.data.projectsCount;
+    } catch (e) {
+      totalCount.value = projects.value.length;
+    }
+  } else {
+    await updateProjects();
   }
 });
 
@@ -196,20 +278,27 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-async function fetchProjectsByTags(tags: string[]) {
-  const args: string[] = [];
-  if (tags.length) args.push(`tags: [${tags.map(t => `"${t}"`).join(', ')}]`);
-  const argStr = args.length ? `(${args.join(', ')})` : '';
+async function fetchProjectsPage(tags: string[], page: number) {
+  const offset = (page - 1) * PAGE_SIZE;
+  const tagArg = tags.length ? `tags: [${tags.map(t => `"${t}"`).join(', ')}]` : '';
+  const projectArgs = [tagArg, `limit: ${PAGE_SIZE}`, `offset: ${offset}`].filter(Boolean).join(', ');
+  const countArgs = tagArg ? `(${tagArg})` : '';
 
   const res = await fetch(`${apiUrl}/graphql`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      query: `{ projects${argStr} { ${PROJECT_FIELDS} } }`,
+      query: `{
+        projects(${projectArgs}) { ${PROJECT_FIELDS} }
+        projectsCount${countArgs}
+      }`,
     }),
   });
   const json = await res.json();
-  return json.data.projects as Project[];
+  return {
+    projects: json.data.projects as Project[],
+    totalCount: json.data.projectsCount as number,
+  };
 }
 
 async function toggleTag(title: string) {
@@ -220,25 +309,39 @@ async function toggleTag(title: string) {
     next.add(title);
   }
   selectedTags.value = next;
+  currentPage.value = 1;
   await updateProjects();
 }
 
 async function clearAll() {
   selectedTags.value = new Set();
+  currentPage.value = 1;
   await updateProjects();
+}
+
+async function goToPage(page: number) {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  await updateProjects();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function updateProjects() {
   const tags = Array.from(selectedTags.value);
 
   // Update URL without navigation
-  const search = tags.length ? `?tags=${tags.map(encodeURIComponent).join(',')}` : '';
+  const params = new URLSearchParams();
+  if (tags.length) params.set('tags', tags.map(encodeURIComponent).join(','));
+  if (currentPage.value > 1) params.set('page', String(currentPage.value));
+  const search = params.toString() ? `?${params.toString()}` : '';
   history.replaceState(null, '', `/projects/${search}`);
 
   // Fetch and update
   loading.value = true;
   try {
-    projects.value = await fetchProjectsByTags(tags);
+    const result = await fetchProjectsPage(tags, currentPage.value);
+    projects.value = result.projects;
+    totalCount.value = result.totalCount;
   } catch (e) {
     console.error('Failed to fetch projects:', e);
   } finally {

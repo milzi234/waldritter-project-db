@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/milzi234/website-unified.git
+    repoURL: https://github.com/milzi234/waldritter-project-db.git
     targetRevision: main
     path: deploy/production
   destination:

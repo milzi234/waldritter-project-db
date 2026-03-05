@@ -1,66 +1,35 @@
-import axios from 'axios';
+import apiClient from './api_client';
 
 class CategoryAPI {
     constructor() {
-        this.api = axios;
-        this.baseURL = 'http://localhost:3000/api/v1/categories';
         this.listeners = {}
         this.tagAPIs = {}
     }
 
-    getAuthToken() {
-        // Get token from localStorage directly
-        const savedUser = localStorage.getItem('google_user');
-        if (savedUser) {
-            try {
-                const user = JSON.parse(savedUser);
-                return user.token;
-            } catch (e) {
-                return null;
-            }
-        }
-        return null;
-    }
-
     async getAll() {
-        const token = this.getAuthToken();
-        const response = await this.api.get(this.baseURL, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.get('/api/v1/categories');
         return response.data;
     }
 
     async get(id) {
-        const token = this.getAuthToken();
-        const response = await this.api.get(`${this.baseURL}/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.get(`/api/v1/categories/${id}`);
         return response.data;
     }
 
     async create(data) {
-        const token = this.getAuthToken();
-        const response = await this.api.post(this.baseURL, data, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.post('/api/v1/categories', data);
         this.emit('created', response.data);
         return response.data;
     }
 
     async update(id, data) {
-        const token = this.getAuthToken();
-        const response = await this.api.put(`${this.baseURL}/${id}`, data, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.put(`/api/v1/categories/${id}`, data);
         this.emit('updated', response.data);
         return response.data;
     }
 
     async delete(id) {
-        const token = this.getAuthToken();
-        const response = await this.api.delete(`${this.baseURL}/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.delete(`/api/v1/categories/${id}`);
         this.emit('deleted', response.data);
         return response.data;
     }
@@ -87,64 +56,34 @@ class CategoryAPI {
 
 class TagAPI {
     constructor(categoryID, categoryAPI) {
-        this.api = axios;
-        this.baseURL = 'http://localhost:3000/api/v1/categories/' + categoryID + '/tags';
+        this.basePath = '/api/v1/categories/' + categoryID + '/tags';
         this.categoryAPI = categoryAPI;
     }
 
-    getAuthToken() {
-        // Get token from localStorage directly
-        const savedUser = localStorage.getItem('google_user');
-        if (savedUser) {
-            try {
-                const user = JSON.parse(savedUser);
-                return user.token;
-            } catch (e) {
-                return null;
-            }
-        }
-        return null;
-    }
-
     async getAll() {
-        const token = this.getAuthToken();
-        const response = await this.api.get(this.baseURL, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.get(this.basePath);
         return response.data;
     }
 
     async get(id) {
-        const token = this.getAuthToken();
-        const response = await this.api.get(`${this.baseURL}/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.get(`${this.basePath}/${id}`);
         return response.data;
     }
 
     async create(data) {
-        const token = this.getAuthToken();
-        const response = await this.api.post(this.baseURL, data, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.post(this.basePath, data);
         this.categoryAPI.emit('tag-created', response.data);
         return response.data;
     }
 
     async update(id, data) {
-        const token = this.getAuthToken();
-        const response = await this.api.put(`${this.baseURL}/${id}`, data, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.put(`${this.basePath}/${id}`, data);
         this.categoryAPI.emit('tag-updated', response.data);
         return response.data;
     }
 
     async delete(id) {
-        const token = this.getAuthToken();
-        const response = await this.api.delete(`${this.baseURL}/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await apiClient.delete(`${this.basePath}/${id}`);
         this.categoryAPI.emit('tag-deleted', response.data);
         return response.data;
     }

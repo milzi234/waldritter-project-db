@@ -3,13 +3,18 @@ import { decodeCredential } from 'vue3-google-signin'
 
 const user = ref(null)
 
+function isTokenExpired(userData) {
+  if (!userData || !userData.expires_at) return true
+  // expires_at is in seconds (JWT exp), compare to current time in seconds
+  return userData.expires_at <= Math.floor(Date.now() / 1000)
+}
+
 // Load saved user on startup
 const savedUser = localStorage.getItem('google_user')
 if (savedUser) {
   try {
     const parsed = JSON.parse(savedUser)
-    // Check if token is still valid (simple check)
-    if (parsed && parsed.token) {
+    if (parsed && parsed.token && !isTokenExpired(parsed)) {
       user.value = parsed
     } else {
       localStorage.removeItem('google_user')
@@ -20,8 +25,11 @@ if (savedUser) {
 }
 
 export function useGoogleAuth() {
-  const isLoggedIn = computed(() => !!user.value)
-  const token = computed(() => user.value?.token || null)
+  const isLoggedIn = computed(() => !!user.value && !isTokenExpired(user.value))
+  const token = computed(() => {
+    if (!user.value || isTokenExpired(user.value)) return null
+    return user.value.token
+  })
   const username = computed(() => user.value?.email || null)
   
   const handleCredentialResponse = (response) => {

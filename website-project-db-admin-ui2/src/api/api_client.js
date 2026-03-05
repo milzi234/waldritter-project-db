@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { useGoogleAuth } from '@/composables/google_auth'
 
+const { token, signOut } = useGoogleAuth()
+
 // Create axios instance
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
@@ -11,12 +13,9 @@ const apiClient = axios.create({
 
 // Add auth token to requests
 apiClient.interceptors.request.use(config => {
-  const { token } = useGoogleAuth()
-  
   if (token.value) {
     config.headers.Authorization = `Bearer ${token.value}`
   }
-  
   return config
 }, error => {
   return Promise.reject(error)
@@ -27,11 +26,7 @@ apiClient.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid - sign out
-      const { signOut } = useGoogleAuth()
       signOut()
-      
-      // Redirect to login
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
